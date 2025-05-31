@@ -46,6 +46,7 @@ struct SongSearchView: View {
                   )
                   .multilineTextAlignment(.center)
                   .foregroundColor(Color(red: 0.92, green: 0.9, blue: 0.88))
+                  .symbolEffect(.breathe)
             }
             Text("노래를 들려주세요 ")
               .font(
