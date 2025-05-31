@@ -6,6 +6,8 @@ struct HarmonicaApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
+//            SongSearchView()
+//            SearchResultView()
         }
     }
 }

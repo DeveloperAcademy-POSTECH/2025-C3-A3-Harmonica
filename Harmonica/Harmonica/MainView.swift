@@ -3,109 +3,86 @@ import SwiftUI
 struct MainView: View {
     var body: some View {
         NavigationStack {
-            VStack {
-                ZStack {
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .frame(width: 808, height: 808)
-                        .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                        .cornerRadius(20)
-                    VStack{
-                        HStack {
-                            // 루크가 작업한 "제목으로 찾기" 뷰 추가하기 필요
-                            // NavigationLink(destination: ) {
-                            ZStack{
-                                Rectangle()
-                                    .foregroundColor(.clear)
-                                    .frame(width: 368, height: 368)
-                                    .background(Color(red: 0.82, green: 0.8, blue: 0.77))
-                                    .cornerRadius(30)
-                                Rectangle()
-                                    .foregroundColor(.clear)
-                                    .frame(width: 292, height: 292)
-                                    .background(Color(red: 0.92, green: 0.9, blue: 0.88))
-                                    .cornerRadius(30)
-                                    .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 30)
-                                            .inset(by: 2.5)
-                                            .stroke(.white, lineWidth: 5)
-                                    )
-                                Text("제목으로 찾기")
-                                    .font(
-                                        Font.custom("SF Pro", size: 64)
-                                            .weight(.medium)
-                                    )
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                            }
-                            NavigationLink(destination: SongSearchView()) {
-                                ZStack{
-                                    Rectangle()
-                                        .foregroundColor(.clear)
-                                        .frame(width: 368, height: 368)
-                                        .background(Color(red: 0.82, green: 0.8, blue: 0.77))
-                                        .cornerRadius(30)
-                                    Rectangle()
-                                        .foregroundColor(.clear)
-                                        .frame(width: 292, height: 292)
-                                        .background(Color(red: 0.92, green: 0.9, blue: 0.88))
-                                        .cornerRadius(30)
-                                        .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 30)
-                                                .inset(by: 2.5)
-                                                .stroke(.white, lineWidth: 5)
-                                        )
-                                    Text("노래로 찾기")
-                                        .font(
-                                            Font.custom("SF Pro", size: 64)
-                                                .weight(.medium)
-                                        )
-                                        .multilineTextAlignment(.center)
-                                        .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                                }
-                            }
-                            
+            HStack {
+                // 화면 좌측 [불렀던 곡(히스토리)] 세로 스크롤뷰
+                HistoryView()
+                // 화면 우측 [App이름 로고]와 [두가지 방식의 노래검색 버튼]
+                VStack {
+                    Text("harmonica")
+                        .font(Font.custom("Pacifico", size: 64))
+                        .foregroundColor(Color(red: 0.49, green: 0, blue: 0))
+                    Spacer()
+                    // [음악인식 검색뷰]
+                    NavigationLink(destination: SongSearchView()) {
+                        ZStack{
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 484, height: 274)
+                                .background(Color(red: 0.22, green: 0.22, blue: 0.22))
+                                .cornerRadius(20)
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 460, height: 250)
+                                .background(Color(red: 0.82, green: 0.8, blue: 0.77))
+                                .cornerRadius(30)
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 426, height: 220)
+                                .background(Color(red: 0.92, green: 0.9, blue: 0.88))
+                                .cornerRadius(100)
+                                .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .inset(by: 2.5)
+                                        .stroke(.white, lineWidth: 5)
+                                )
+                            Text("음악 들려줘서 \n 찾기")
+                                .font(
+                                    Font.custom("Pretendard JP", size: 55)
+                                        .weight(.bold)
+                                )
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
                         }
-                        NavigationLink(destination: HistoryView()) {
-                            ZStack{
-                                Rectangle()
-                                    .foregroundColor(.clear)
-                                    .frame(width: 759, height: 368)
-                                    .background(Color(red: 0.75, green: 0.75, blue: 0.75))
-                                
-                                    .cornerRadius(100)
-                                
-                                    .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 4)
-                                Rectangle()
-                                    .foregroundColor(.clear)
-                                    .frame(width: 670, height: 292)
-                                    .background(Color(red: 0.85, green: 0.85, blue: 0.85))
-                                
-                                    .cornerRadius(100)
-                                
-                                    .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                                
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 100)
-                                            .inset(by: 2.5)
-                                            .stroke(.white, lineWidth: 5)
-                                        
-                                    )
-                                Text("불렀던 곡")
-                                    .font(
-                                        Font.custom("SF Pro", size: 64)
-                                            .weight(.medium)
-                                    )
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                            }
+                    }
+                    // [음성노래제목 검색뷰]
+                    // 루크가 작업한 "제목으로 찾기" 뷰 추가하기 필요
+//                    NavigationLink() {
+                        ZStack{
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 484, height: 274)
+                                .background(Color(red: 0.22, green: 0.22, blue: 0.22))
+                                .cornerRadius(20)
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 460, height: 250)
+                                .background(Color(red: 0.82, green: 0.8, blue: 0.77))
+                                .cornerRadius(30)
+                            Rectangle()
+                                .foregroundColor(.clear)
+                                .frame(width: 426, height: 220)
+                                .background(Color(red: 0.92, green: 0.9, blue: 0.88))
+                                .cornerRadius(100)
+                                .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .inset(by: 2.5)
+                                        .stroke(.white, lineWidth: 5)
+                                )
+                            Text("제목 말해서 \n 찾기")
+                                .font(
+                                    Font.custom("Pretendard JP", size: 55)
+                                        .weight(.bold)
+                                )
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
                         }
                     }
                 }
-            }
+//            }
+            .navigationViewStyle(StackNavigationViewStyle())
+            .padding()
         }
-        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
