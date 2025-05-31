@@ -12,7 +12,7 @@ struct MainView: View {
                         .font(Font.custom("Pacifico", size: 64))
                         .foregroundColor(Color(red: 0.49, green: 0, blue: 0))
                     Spacer()
-                    // [음악인식 검색뷰]
+                    // [음악인식 검색뷰(듀이) 이동버튼]
                     NavigationLink(destination: SongSearchView()) {
                         ZStack{
                             Rectangle()
@@ -45,9 +45,8 @@ struct MainView: View {
                                 .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
                         }
                     }
-                    // [음성노래제목 검색뷰]
-                    // 루크가 작업한 "제목으로 찾기" 뷰 추가하기 필요
-//                    NavigationLink() {
+                    // [음성노래제목 검색뷰(루크) 이동버튼]
+                    NavigationLink(destination: STTView()) {
                         ZStack{
                             Rectangle()
                                 .foregroundColor(.clear)
@@ -80,7 +79,7 @@ struct MainView: View {
                         }
                     }
                 }
-//            }
+            }
             .navigationViewStyle(StackNavigationViewStyle())
             .padding()
         }

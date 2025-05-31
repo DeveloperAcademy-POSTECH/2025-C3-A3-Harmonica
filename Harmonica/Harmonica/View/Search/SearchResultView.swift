@@ -96,7 +96,3 @@ struct SearchResultView: View {
         }
     }
 }
-
-#Preview {
-    SearchResultView()
-}
