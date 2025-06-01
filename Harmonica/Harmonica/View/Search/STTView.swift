@@ -3,6 +3,8 @@ import SwiftUI
 struct STTView {
   @State private var permissionMessage = ""
   @State private var isShowPermissionAlert = false
+  
+  @State private var speechRecognizer = SpeechRecognizer()
 }
 
 extension STTView {
@@ -22,17 +24,69 @@ extension STTView {
     isShowPermissionAlert = true
     return false
   }
+  
+  
+  private func startSpeechRecognition() {
+    speechRecognizer.resetTranscript()
+    speechRecognizer.startTranscribing()
+  }
+  
+  private func resetSpeechRecognition() {
+    speechRecognizer.resetTranscript()
+  }
+  
+  private func stopSpeechRecognition() {
+    speechRecognizer.stopTranscribing()
+  }
+  
 }
 
 extension STTView: View {
   var body: some View {
     VStack {
-      Text("Test")
+      Text("Speech To Text")
+        .font(.title)
+        .padding()
+        .foregroundStyle(speechRecognizer.isRecording ? .black : .gray.opacity(0.3))
+      
+      TextField("", text: $speechRecognizer.transcript)
+        .padding()
+        .frame(height: 50)
+        .border(.black, width: 1)
+        .padding()
+      
+      HStack {
+        Button(action: {
+          Task {
+            if await checkSTTPermission() {
+              startSpeechRecognition()
+            }
+          }
+        }) {
+          Text("Start")
+            .padding()
+            .background(.blue)
+            .foregroundStyle(.white)
+            .clipShape(.rect(cornerRadius: 8))
+        }
+        
+        Button(action: { stopSpeechRecognition() }) {
+          Text("Stop")
+            .padding()
+            .background(Color.red)
+            .foregroundStyle(.white)
+            .clipShape(.rect(cornerRadius: 8))
+        }
+      }
     }
     .onAppear {
       Task {
         _ = await checkSTTPermission()
       }
+    }
+    .onDisappear {
+      stopSpeechRecognition()
+      resetSpeechRecognition()
     }
     .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
       
