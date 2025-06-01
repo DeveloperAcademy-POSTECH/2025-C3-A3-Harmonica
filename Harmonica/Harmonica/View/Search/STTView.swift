@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct STTView {
+  @State private var speechRecognizer = SpeechRecognizer()
+  
   @State private var permissionMessage = ""
   @State private var isShowPermissionAlert = false
-  
-  @State private var speechRecognizer = SpeechRecognizer()
+  @State private var isShowRecognizerAlert = false
 }
 
 extension STTView {
@@ -88,8 +89,12 @@ extension STTView: View {
       stopSpeechRecognition()
       resetSpeechRecognition()
     }
+    .onChange(of: speechRecognizer.errorMessage) { _, new in
+      guard new != nil else { return }
+      isShowRecognizerAlert = true
+    }
+
     .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
-      
       Button(action: { isShowPermissionAlert = false }) {
         Text("취소")
       }
@@ -104,6 +109,16 @@ extension STTView: View {
       
     } message: {
       Text(permissionMessage)
+    }
+    .alert("음성 인식 오류", isPresented: $isShowRecognizerAlert) {
+      Button(action: {
+        speechRecognizer.errorMessage = nil
+        isShowPermissionAlert = false
+      }) {
+        Text("확인")
+      }
+    } message: {
+      Text(speechRecognizer.errorMessage ?? "")
     }
   }
 }
