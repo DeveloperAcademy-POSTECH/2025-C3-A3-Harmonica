@@ -6,8 +6,11 @@ struct HarmonicaApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
-//            SongSearchView()
-//            SearchResultView()
+            .onAppear {
+              Task {
+                await PermissionManager.requestSTTPermissions()
+              }
+            }
         }
     }
 }
