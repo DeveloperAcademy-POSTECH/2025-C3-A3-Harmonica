@@ -5,7 +5,8 @@ import SwiftUI
 struct HarmonicaApp: App {
     var body: some Scene {
         WindowGroup {
-            MainView()
+            SongPracticeView(song: .preview)
         }
+        .modelContainer(for: Song.self)
     }
 }
