@@ -89,15 +89,6 @@ struct SongSearchView: View {
     var body: some View {
         VStack() {
             HStack {
-                if let item = recognizer.matchedSong {
-                    Text("Title: \(item.title ?? "Unknown")")
-                    Text("Artist: \(item.artist ?? "Unknown")")
-                } else if recognizer.didNotFindSong {
-                    Text("찾으시는 노래가 없어요")
-                }
-                else {
-                    Text("듣고 있어요...")
-                }
                 Button(action: {
                     Task {
                         let permissionStatus = await requestMicPermission()
