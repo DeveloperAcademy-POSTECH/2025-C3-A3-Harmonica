@@ -2,6 +2,7 @@ import SwiftUI
 
 struct STTView {
   @State private var speechRecognizer = SpeechRecognizer()
+  @State private var queryGenerateViewModel = QueryGenerateViewModel()
   
   @State private var permissionMessage = ""
   @State private var isShowPermissionAlert = false
@@ -40,6 +41,12 @@ extension STTView {
     speechRecognizer.stopTranscribing()
   }
   
+  private func generateQuery() {
+    Task {
+      await queryGenerateViewModel.generateQuery(inputText: speechRecognizer.transcript)
+    }
+  }
+  
 }
 
 extension STTView: View {
@@ -66,18 +73,39 @@ extension STTView: View {
         }) {
           Text("Start")
             .padding()
-            .background(.blue)
+            .background(!speechRecognizer.isRecording ? Color.blue : Color.blue.opacity(0.3))
             .foregroundStyle(.white)
             .clipShape(.rect(cornerRadius: 8))
         }
+        .disabled(speechRecognizer.isRecording)
         
         Button(action: { stopSpeechRecognition() }) {
           Text("Stop")
             .padding()
-            .background(Color.red)
+            .background(speechRecognizer.isRecording ? Color.red : Color.red.opacity(0.3))
             .foregroundStyle(.white)
             .clipShape(.rect(cornerRadius: 8))
         }
+        .disabled(!speechRecognizer.isRecording)
+      }
+      
+      Divider()
+      
+      Button(action: { generateQuery() }) {
+        Text("검색 키워드 생성")
+          .padding()
+      }
+      .disabled(speechRecognizer.isRecording || speechRecognizer.transcript.isEmpty)
+      
+      HStack(alignment: .top, spacing: 20) {
+        if queryGenerateViewModel.inProgress {
+          ProgressView()
+        } else {
+          Image(systemName: "magnifyingglass")
+            .font(.title2)
+        }
+        Text(queryGenerateViewModel.outputText)
+          .font(.body)
       }
     }
     .onAppear {
