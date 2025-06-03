@@ -9,14 +9,24 @@ class ShazamRecognizer: NSObject, ObservableObject {
     private let matchDelegate = MatchDelegate()
     
     @Published var matchedSong: SHMatchedMediaItem?
+    @Published var didNotFindSong: Bool = false // ❗ 실패 여부 상태 추가
     
     override init() {
         super.init()
         session.delegate = matchDelegate
+        // 노래 매칭시 결과처리
         matchDelegate.onMatch = {
             [weak self] mediaItem in DispatchQueue.main.async {
                 self?.matchedSong = mediaItem
-                self?.stopListening() // 매칭된 후 자동으로 종료됨
+                self?.stopListening() // 매칭완료시 자동종료
+            }
+        }
+        // 만약 매칭되는 결과가 없을 경우 처리방법
+        matchDelegate.onNoMatch = { [weak self] in
+            DispatchQueue.main.async {
+                self?.matchedSong = nil
+                self?.didNotFindSong = true // ❗ 실패 상태 표시
+                self?.stopListening()
             }
         }
     }
@@ -54,10 +64,15 @@ class ShazamRecognizer: NSObject, ObservableObject {
 // SHSession 결과처리 델리게이트
 class MatchDelegate: NSObject, SHSessionDelegate {
     var onMatch: ((SHMatchedMediaItem) -> Void)?
+    var onNoMatch: (() -> Void)? // ❗ 실패 콜백 추가
     
     func session(_ session: SHSession, didFind match: SHMatch) {
         guard let mediaItem = match.mediaItems.first else { return }
         onMatch?(mediaItem)
+    }
+    func session(_ session: SHSession, didNotFindMatchFor signature: SHSignature) {
+        // ❗ 곡을 찾지 못했을 때 실행됨
+        onNoMatch?()
     }
 }
 
@@ -65,6 +80,11 @@ class MatchDelegate: NSObject, SHSessionDelegate {
 struct SongSearchView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var recognizer = ShazamRecognizer()
+    @State private var permissionMessage = ""
+    @State private var isShowPermissionAlert = false
+    @State private var isShowRecognizerAlert = false
+    
+    @State private var promptText = "노래를 들려주세요"
     
     var body: some View {
         VStack() {
@@ -72,10 +92,23 @@ struct SongSearchView: View {
                 if let item = recognizer.matchedSong {
                     Text("Title: \(item.title ?? "Unknown")")
                     Text("Artist: \(item.artist ?? "Unknown")")
-                } else {
+                } else if recognizer.didNotFindSong {
+                    Text("찾으시는 노래가 없어요")
+                }
+                else {
                     Text("듣고 있어요...")
                 }
                 Button(action: {
+                    Task {
+                        let permissionStatus = await requestMicPermission()
+                        if permissionStatus == .granted {
+                            startSongRecognition()
+                        } else {
+                            // 권한 비허용시 사용자에게 안내하기
+                            permissionMessage = "마이크 권한이 필요합니다."
+                            isShowPermissionAlert = true
+                        }
+                    }
                     presentationMode.wrappedValue.dismiss()
                     try? recognizer.startListening()
                 }) {
@@ -123,20 +156,55 @@ struct SongSearchView: View {
             }
             Spacer()
             
-            // (아직 미적용)모니카의 요청: 텍스트를 한줄로 - 검색시작 1초 이후 "지금 들려주세요 듣고있어요"
-            Text("노래를 들려주세요 ")
+            Text(promptText)
                 .font(
                     Font.custom("SF Pro", size: 64)
                         .weight(.medium)
                 )
                 .multilineTextAlignment(.center)
                 .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.5), value: promptText)
             Spacer()
         }
         .navigationBarBackButtonHidden(true) // 기본 뒤로가기 버튼 숨김
         
         .onAppear {
             try? recognizer.startListening()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                withAnimation {
+                    promptText = "지금 들려주세요. 듣고 있어요"
+                }
+            }
         }
+    }
+}
+
+extension SongSearchView{
+    
+    private func requestMicPermission() async -> MicPermissionStatus {
+        let permission = AVAudioApplication.shared.recordPermission
+        switch permission {
+        case .granted:
+            return .granted
+        case .denied:
+            return .denied
+        case .undetermined:
+            return await withCheckedContinuation { continuation in
+                AVAudioApplication.requestRecordPermission { granted in
+                    continuation.resume(returning: granted ? .granted : .denied)
+                }
+            }
+        @unknown default:
+            return .undetermined
+        }
+    }
+    
+    private func startSongRecognition() {
+        try? recognizer.startListening()
+    }
+    
+    private func stopSongRecognition() {
+        recognizer.stopListening()
     }
 }
