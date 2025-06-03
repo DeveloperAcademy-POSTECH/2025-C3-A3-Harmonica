@@ -10,9 +10,22 @@
 		9434108C2DE6EF390002634E /* Harmonica.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Harmonica.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		940C72F92DEECF9E00948154 /* Exceptions for "Harmonica" folder in "Harmonica" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9434108B2DE6EF390002634E /* Harmonica */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9434108E2DE6EF390002634E /* Harmonica */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				940C72F92DEECF9E00948154 /* Exceptions for "Harmonica" folder in "Harmonica" target */,
+			);
 			path = Harmonica;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Harmonica/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "“음성 입력 기능을 사용하기 위해 마이크 접근 권한이 필요합니다.”";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "“음성 입력과 명령 실행을 위해 음성 인식 권한이 필요합니다.”";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -288,6 +302,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Harmonica/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "“음성 입력 기능을 사용하기 위해 마이크 접근 권한이 필요합니다.”";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "“음성 입력과 명령 실행을 위해 음성 인식 권한이 필요합니다.”";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
