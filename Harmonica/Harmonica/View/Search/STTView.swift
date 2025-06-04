@@ -2,11 +2,17 @@ import SwiftUI
 
 struct STTView {
   @State private var speechRecognizer = SpeechRecognizer()
-  @State private var queryGenerateViewModel = QueryGenerateViewModel()
+  
+  private let queryGenerateManager = QueryGenerateManager()
   
   @State private var permissionMessage = ""
   @State private var isShowPermissionAlert = false
   @State private var isShowRecognizerAlert = false
+  
+  @State private var searchKeyword = ""
+  
+  @State private var isShowQueryGenerateAlert = false
+  @State private var queryGenerateMessage = ""
 }
 
 extension STTView {
@@ -41,12 +47,6 @@ extension STTView {
     speechRecognizer.stopTranscribing()
   }
   
-  private func generateQuery() {
-    Task {
-      await queryGenerateViewModel.generateQuery(inputText: speechRecognizer.transcript)
-    }
-  }
-  
 }
 
 extension STTView: View {
@@ -63,54 +63,27 @@ extension STTView: View {
         .border(.black, width: 1)
         .padding()
       
-      HStack {
-        Button(action: {
-          Task {
-            if await checkSTTPermission() {
-              startSpeechRecognition()
-              queryGenerateViewModel.outputText = ""
-            }
-          }
-        }) {
-          Text("Start")
-            .padding()
-            .background(!speechRecognizer.isRecording ? Color.blue : Color.blue.opacity(0.3))
-            .foregroundStyle(.white)
-            .clipShape(.rect(cornerRadius: 8))
-        }
-        .disabled(speechRecognizer.isRecording)
-        
-        Button(action: { stopSpeechRecognition() }) {
-          Text("Stop")
-            .padding()
-            .background(speechRecognizer.isRecording ? Color.red : Color.red.opacity(0.3))
-            .foregroundStyle(.white)
-            .clipShape(.rect(cornerRadius: 8))
-        }
-        .disabled(!speechRecognizer.isRecording)
-      }
-      
       Divider()
       
-      Button(action: { generateQuery() }) {
-        Text("검색 키워드 생성")
-          .padding()
-      }
-      .disabled(speechRecognizer.isRecording || speechRecognizer.transcript.isEmpty)
-      
-      HStack(alignment: .top, spacing: 20) {
-        if queryGenerateViewModel.inProgress {
-          ProgressView()
-        } else {
-          Image(systemName: "magnifyingglass")
-            .font(.title2)
-        }
-        Text(queryGenerateViewModel.outputText)
-          .font(.body)
-      }
+      Text(searchKeyword)
     }
     .onAppear {
       Task {
+        speechRecognizer.onFinish = nil
+        speechRecognizer.onFinish = { finalText in
+          guard !finalText.isEmpty else { return }
+          
+          Task {
+            do {
+              let keyword = try await queryGenerateManager.generate(inputText: finalText)
+              searchKeyword = keyword
+            } catch {
+              queryGenerateMessage = error.localizedDescription
+              isShowQueryGenerateAlert = true
+            }
+          }
+        }
+        
         if await checkSTTPermission() {
          startSpeechRecognition()
         }
@@ -119,7 +92,7 @@ extension STTView: View {
     .onDisappear {
       stopSpeechRecognition()
       resetSpeechRecognition()
-      queryGenerateViewModel.outputText = ""
+      speechRecognizer.onFinish = nil
     }
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }
@@ -151,6 +124,16 @@ extension STTView: View {
       }
     } message: {
       Text(speechRecognizer.errorMessage ?? "")
+    }
+    .alert("쿼리 생성 오류", isPresented: $isShowQueryGenerateAlert) {
+      Button(action: {
+        queryGenerateMessage = ""
+        isShowQueryGenerateAlert = false
+      }) {
+        Text("확인")
+      }
+    } message: {
+      Text(queryGenerateMessage)
     }
   }
 }

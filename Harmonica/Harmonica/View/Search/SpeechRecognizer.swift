@@ -39,6 +39,8 @@ final class SpeechRecognizer {
   
   private var timer: Timer?
   
+  var onFinish: ((String) -> Void)?
+  
   init() { }
   
   func startTranscribing() {
@@ -52,6 +54,7 @@ final class SpeechRecognizer {
     isStopping = true
     timer?.invalidate()
     timer = nil
+    onFinish?(transcript)
     reset()
   }
   
