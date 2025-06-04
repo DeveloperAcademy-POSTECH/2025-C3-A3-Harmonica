@@ -68,6 +68,7 @@ extension STTView: View {
           Task {
             if await checkSTTPermission() {
               startSpeechRecognition()
+              queryGenerateViewModel.outputText = ""
             }
           }
         }) {
@@ -110,12 +111,15 @@ extension STTView: View {
     }
     .onAppear {
       Task {
-        _ = await checkSTTPermission()
+        if await checkSTTPermission() {
+         startSpeechRecognition()
+        }
       }
     }
     .onDisappear {
       stopSpeechRecognition()
       resetSpeechRecognition()
+      queryGenerateViewModel.outputText = ""
     }
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }

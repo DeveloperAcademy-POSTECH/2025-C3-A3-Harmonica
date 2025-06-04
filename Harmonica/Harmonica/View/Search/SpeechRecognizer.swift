@@ -37,6 +37,8 @@ final class SpeechRecognizer {
   
   private var isStopping = false
   
+  private var timer: Timer?
+  
   init() { }
   
   func startTranscribing() {
@@ -48,6 +50,8 @@ final class SpeechRecognizer {
   func stopTranscribing() {
     isRecording = false
     isStopping = true
+    timer?.invalidate()
+    timer = nil
     reset()
   }
   
@@ -114,8 +118,16 @@ final class SpeechRecognizer {
     
     if let result {
       let newText = result.bestTranscription.formattedString
+      
+      if result.isFinal {
+        transcribe(newText)
+        stopTranscribing()
+        return
+      }
+      
       if !newText.isEmpty && newText.count >= transcript.count {
         transcribe(newText)
+        startTimer()
       }
     }
     
@@ -143,5 +155,11 @@ final class SpeechRecognizer {
     }
   }
   
+  private func startTimer() {
+    timer?.invalidate()
+    timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+      self?.stopTranscribing()
+    }
+  }
 }
 
