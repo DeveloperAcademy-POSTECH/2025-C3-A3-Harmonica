@@ -13,7 +13,10 @@ struct MainView: View {
                         .foregroundColor(Color(red: 0.49, green: 0, blue: 0))
                     Spacer()
                     // [음악인식 검색뷰(듀이) 이동버튼]
-                    NavigationLink(destination: SongSearchView()) {
+                    NavigationLink(destination: SongSearchView { searchResult in
+                        // 검색 완료 시 실행할 코드
+                        print("검색 완료: \(searchResult)")
+                    }) {
                         ZStack{
                             Rectangle()
                                 .foregroundColor(.clear)

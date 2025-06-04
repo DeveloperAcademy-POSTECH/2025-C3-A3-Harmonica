@@ -86,6 +86,11 @@ struct SongSearchView: View {
     
     @State private var promptText = "노래를 들려주세요"
     
+    @State private var isResultViewActive: Bool = false
+    
+//    @ObservedObject private var recognizer = ShazamRecognizer()
+    let onSearchCompleted: (SHMatchedMediaItem?) -> Void // 🔁 결과를 넘길 콜백
+    
     var body: some View {
         VStack() {
             HStack {
@@ -175,6 +180,16 @@ struct SongSearchView: View {
                 withAnimation {
                     promptText = "지금 들려주세요. 듣고 있어요"
                 }
+            }
+        }
+        .onChange(of: recognizer.matchedSong) { newValue in
+            if newValue != nil {
+                onSearchCompleted(newValue)
+            }
+        }
+        .onChange(of: recognizer.didNotFindSong) { didFail in
+            if didFail {
+                onSearchCompleted(nil)
             }
         }
     }
