@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		9434108C2DE6EF390002634E /* Harmonica.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Harmonica.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = Harmonica;
 			packageProductDependencies = (
+				EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */,
 			);
 			productName = Harmonica;
 			productReference = 9434108C2DE6EF390002634E /* Harmonica.app */;
@@ -108,6 +114,9 @@
 			);
 			mainGroup = 943410832DE6EF390002634E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9434108D2DE6EF390002634E /* Products */;
 			projectDirPath = "";
@@ -266,7 +275,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = VTQUW9KX3J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Harmonica/Info.plist;
@@ -299,7 +308,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = VTQUW9KX3J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Harmonica/Info.plist;
@@ -346,6 +355,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.13.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 943410842DE6EF390002634E /* Project object */;
 }
