@@ -1,10 +1,3 @@
-//
-//  KaraokeLyric.swift
-//  HarmonyKaraoke
-//
-//  Created by 나현흠 on 6/3/25.
-//
-
 import Foundation
 
 /// 한 소절의 가사와 그에 해당하는 타이밍 정보를 나타내는 모델
