@@ -14,7 +14,7 @@ struct MainView: View {
             .padding(.bottom, 12)
             HStack {
                 ZStack {
-                    Image(isShazamPressed ? "ShazamView_Pressed" : "ShazamView_UnPressed")
+                    Image(isShazamPressed ? "ShazamView_Pressed" : "ShazamView_Unpressed")
                 }
                 .contentShape(Rectangle())
                 .gesture(
@@ -31,7 +31,7 @@ struct MainView: View {
                 
 
                 ZStack {
-                    Image(isSTTPressed ? "STTSearchView_Pressed" : "STTSearchView_UnPressed")
+                    Image(isSTTPressed ? "STTSearchView_Pressed" : "STTSearchView_Unpressed")
                 }
                 .contentShape(Rectangle())
                 .gesture(
@@ -83,18 +83,19 @@ struct SongBox:View {
                     albumImage
                         .resizable()
                         .scaledToFit()
-                        .scaledToFill()
                         .blur(radius:2)
-                        .mask(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.white, .black]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            //블러 처리 하는 부분...인데 블러 굳이 필요할까 싶긴 한데...페퍼가 하라니까 한 거긴 한데 테크 눈에는 없는게 나아보이기도...
-                        )
+                        .cornerRadius(16)
+//                        .mask(
+//                            LinearGradient(
+//                                gradient: Gradient(colors: [.white, .black]),
+//                                startPoint: .top,
+//                                endPoint: .bottom
+//                            )
+////                            //블러 처리 하는 부분...인데 블러 굳이 필요할까 싶긴 한데...페퍼가 하라니까 한 거긴 한데 테크 눈에는 없는게 나아보이기도...
+//                        )
                         .frame(width: 385, height: 269)
                 }
+                
                 RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(

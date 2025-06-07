@@ -1,11 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "나그네고향.svg",
+      "filename" : "나그네고향.svg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "나그네고향 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
