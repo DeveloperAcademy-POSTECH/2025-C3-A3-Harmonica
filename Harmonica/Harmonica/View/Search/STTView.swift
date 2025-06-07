@@ -13,6 +13,9 @@ struct STTView {
   
   @State private var isShowQueryGenerateAlert = false
   @State private var queryGenerateMessage = ""
+  
+  @State private var isShowMusicKitAlert = false
+  @State private var musicPermisionMessage = ""
 }
 
 extension STTView {
@@ -30,6 +33,21 @@ extension STTView {
     }
     
     isShowPermissionAlert = true
+    return false
+  }
+  
+  private func checkMusicPermission() async -> Bool {
+    let status = await PermissionManager.requestMusicPermission()
+    switch status {
+    case .authorized:
+      return true
+    case .denied, .restricted:
+      musicPermisionMessage = "Apple Music 접근 권한이 필요합니다.\n설정 앱에서 허용해주세요."
+    case .notDetermined:
+      musicPermisionMessage = "Apple Music 권한 요청이 완료되지 않았습니다.\n다시 시도해주세요."
+    }
+    
+    isShowMusicKitAlert = true
     return false
   }
   
@@ -84,9 +102,11 @@ extension STTView: View {
           }
         }
         
-        if await checkSTTPermission() {
-         startSpeechRecognition()
-        }
+        guard await checkSTTPermission() else { return }
+        guard await checkMusicPermission() else { return }
+        
+        startSpeechRecognition()
+        
       }
     }
     .onDisappear {
@@ -100,7 +120,10 @@ extension STTView: View {
     }
 
     .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
-      Button(action: { isShowPermissionAlert = false }) {
+      Button(action: {
+        isShowPermissionAlert = false
+        permissionMessage = ""
+      }) {
         Text("취소")
       }
       
@@ -114,6 +137,25 @@ extension STTView: View {
       
     } message: {
       Text(permissionMessage)
+    }
+    .alert("애플 뮤직 권한 요청", isPresented: $isShowMusicKitAlert) {
+      Button(action: {
+        isShowMusicKitAlert = false
+        musicPermisionMessage = ""
+      }) {
+        Text("취소")
+      }
+      
+      Button(action: {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+          UIApplication.shared.open(url)
+        }
+      }) {
+        Text("설정으로 이동")
+      }
+      
+    } message: {
+      Text(musicPermisionMessage)
     }
     .alert("음성 인식 오류", isPresented: $isShowRecognizerAlert) {
       Button(action: {
