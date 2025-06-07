@@ -60,18 +60,10 @@ extension STTView {
     return false
   }
   
-  
-  private func startSpeechRecognition() {
+  private func resetRecognizer() {
     speechRecognizer.resetTranscript()
-    speechRecognizer.startTranscribing()
-  }
-  
-  private func resetSpeechRecognition() {
-    speechRecognizer.resetTranscript()
-  }
-  
-  private func stopSpeechRecognition() {
     speechRecognizer.stopTranscribing()
+    speechRecognizer.onFinish = nil
   }
   
   private func searchMusic(query: String) {
@@ -92,6 +84,24 @@ extension STTView {
     }
   }
   
+  private func startSTT() {
+    speechRecognizer.onFinish = { finalText in
+      guard !finalText.isEmpty else { return }
+      
+      Task {
+        do {
+          let keyword = try await queryGenerateManager.generate(inputText: finalText)
+          searchMusic(query: keyword)
+          
+        } catch {
+          queryGenerateMessage = "에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
+          isShowQueryGenerateAlert = true
+        }
+      }
+    }
+    speechRecognizer.resetTranscript()
+    speechRecognizer.startTranscribing()
+  }
 }
 
 extension STTView: View {
@@ -119,38 +129,17 @@ extension STTView: View {
     }
     .onAppear {
       Task {
-        speechRecognizer.onFinish = nil
-        speechRecognizer.onFinish = { finalText in
-          guard !finalText.isEmpty else { return }
-          
-          Task {
-            do {
-              let keyword = try await queryGenerateManager.generate(inputText: finalText)
-              searchKeyword = keyword
-              searchMusic(query: keyword)
-            } catch {
-              queryGenerateMessage = error.localizedDescription
-              isShowQueryGenerateAlert = true
-            }
-          }
-        }
-        
         guard await checkSTTPermission() else { return }
         guard await checkMusicPermission() else { return }
         
-        startSpeechRecognition()
-        
+        startSTT()
       }
     }
     .onDisappear {
-      stopSpeechRecognition()
-      resetSpeechRecognition()
-      speechRecognizer.onFinish = nil
+      resetRecognizer()
     }
     .sheet(isPresented: $isShowSearchResult, onDismiss: {
-      speechRecognizer.resetTranscript()
-      speechRecognizer.stopTranscribing()
-      speechRecognizer.onFinish = nil
+      resetRecognizer()
       musicManager.stopPreview()
     }) {
       if let item = item {
