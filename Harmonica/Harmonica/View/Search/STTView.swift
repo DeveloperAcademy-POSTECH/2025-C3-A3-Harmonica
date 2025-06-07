@@ -10,22 +10,18 @@ struct STTView {
   @State private var isShowPermissionAlert = false
   @State private var isShowRecognizerAlert = false
   
-  @State private var searchKeyword = ""
-  
-  @State private var isShowQueryGenerateAlert = false
-  @State private var queryGenerateMessage = ""
-  
   @State private var isShowMusicKitAlert = false
   @State private var musicPermisionMessage = ""
   
   @State private var isLoading = false
   @State private var item: Item?
-  @State private var songSearchErrorMessage: String?
   @State private var isShowSearchResult = false
-  @State private var isShowSearchResultAlert = false
   
   @State private var selectedSongID: String?
   @State private var navigateToDetail = false
+  
+  @State private var errorMessage: String?
+  @State private var isShowErrorAlert = false
 }
 
 extension STTView {
@@ -70,7 +66,7 @@ extension STTView {
   private func searchMusic(query: String) {
     isLoading = true
     item = nil
-    songSearchErrorMessage = nil
+    errorMessage = nil
     
     Task {
       do {
@@ -78,8 +74,8 @@ extension STTView {
         item = result
         isShowSearchResult = true
       } catch {
-        songSearchErrorMessage = "에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
-        isShowSearchResultAlert = true
+        errorMessage = "노래 검색 중 에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
+        isShowErrorAlert = true
       }
       isLoading = false
     }
@@ -95,8 +91,8 @@ extension STTView {
           searchMusic(query: keyword)
           
         } catch {
-          queryGenerateMessage = "에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
-          isShowQueryGenerateAlert = true
+          errorMessage = "에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
+          isShowErrorAlert = true
         }
       }
     }
@@ -120,8 +116,6 @@ extension STTView: View {
         .padding()
       
       Divider()
-      
-      Text(searchKeyword)
       
       if isLoading {
         ProgressView("노래를 찾는 중입니다...")
@@ -272,26 +266,13 @@ extension STTView: View {
       } message: {
         Text(speechRecognizer.errorMessage ?? "")
       }
-      .alert("쿼리 생성 오류", isPresented: $isShowQueryGenerateAlert) {
-        Button(action: {
-          queryGenerateMessage = ""
-          isShowQueryGenerateAlert = false
-        }) {
-          Text("확인")
-        }
-      } message: {
-        Text(queryGenerateMessage)
-      }
-      .alert("노래 검색 오류", isPresented: $isShowSearchResultAlert) {
-        Button(action: {
-          isShowSearchResultAlert = false
-          songSearchErrorMessage = nil
-        }) {
-          Text("확인")
-        }
-      } message: {
-        Text(songSearchErrorMessage ?? "알 수 없는 오류")
-      }
+      .alert("오류 발생", isPresented: $isShowErrorAlert, actions: {
+          Button(role: .cancel, action: { errorMessage = nil }) {
+            Text("확인")
+          }
+        }, message: {
+          Text(errorMessage ?? "알 수 없는 오류")
+      })
   }
 }
 
