@@ -1,4 +1,5 @@
 import SwiftUI
+import Glur
 
 struct MainView: View {
     @State private var isSTTPressed: Bool = false
@@ -8,8 +9,8 @@ struct MainView: View {
         NavigationStack(path: $path){
             HStack(spacing: 24) {
                 SongBox(SongName: "나그네 고향", AlbumCover: Image("나그네고향"))
-                SongBox(SongName: "사내답게")
-                SongBox(SongName: "내 여자 내 남자")
+                SongBox(SongName: "내 여자 내 남자", AlbumCover: Image("내 여자 내 남자 앨범 커버"))
+                SongBox(SongName: "")
             }
             .padding(.bottom, 12)
             HStack {
@@ -83,16 +84,12 @@ struct SongBox:View {
                     albumImage
                         .resizable()
                         .scaledToFit()
-                        .blur(radius:2)
+                        .glur(radius: 6.0,
+                              offset: 0,
+                              interpolation: 0.8,
+                              direction: .down
+                        )
                         .cornerRadius(16)
-//                        .mask(
-//                            LinearGradient(
-//                                gradient: Gradient(colors: [.white, .black]),
-//                                startPoint: .top,
-//                                endPoint: .bottom
-//                            )
-////                            //블러 처리 하는 부분...인데 블러 굳이 필요할까 싶긴 한데...페퍼가 하라니까 한 거긴 한데 테크 눈에는 없는게 나아보이기도...
-//                        )
                         .frame(width: 385, height: 269)
                 }
                 
