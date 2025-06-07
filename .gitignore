@@ -63,3 +63,5 @@ fastlane/test_output
 
 # Firebase 설정 파일 제외
 GoogleService-Info.plist
+
+.DS_Store
