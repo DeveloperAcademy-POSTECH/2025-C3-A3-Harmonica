@@ -4,6 +4,7 @@ struct STTView {
   @State private var speechRecognizer = SpeechRecognizer()
   
   private let queryGenerateManager = QueryGenerateManager()
+  private let musicManager = MusicManager()
   
   @State private var permissionMessage = ""
   @State private var isShowPermissionAlert = false
@@ -16,6 +17,14 @@ struct STTView {
   
   @State private var isShowMusicKitAlert = false
   @State private var musicPermisionMessage = ""
+  
+  @State private var isLoading = false
+  @State private var item: Item?
+  @State private var songSearchErrorMessage: String?
+  @State private var isShowSearchResult = false
+  @State private var isShowSearchResultAlert = false
+  
+  
 }
 
 extension STTView {
@@ -65,6 +74,24 @@ extension STTView {
     speechRecognizer.stopTranscribing()
   }
   
+  private func searchMusic(query: String) {
+    isLoading = true
+    item = nil
+    songSearchErrorMessage = nil
+    
+    Task {
+      do {
+        let result = try await musicManager.searchTrack(query: query)
+        item = result
+        isShowSearchResult = true
+      } catch {
+        songSearchErrorMessage = error.localizedDescription
+        isShowSearchResult = true
+      }
+      isLoading = false
+    }
+  }
+  
 }
 
 extension STTView: View {
@@ -84,6 +111,11 @@ extension STTView: View {
       Divider()
       
       Text(searchKeyword)
+      
+      if isLoading {
+        ProgressView("노래를 찾는 중입니다...")
+          .padding()
+      }
     }
     .onAppear {
       Task {
@@ -95,6 +127,7 @@ extension STTView: View {
             do {
               let keyword = try await queryGenerateManager.generate(inputText: finalText)
               searchKeyword = keyword
+              searchMusic(query: keyword)
             } catch {
               queryGenerateMessage = error.localizedDescription
               isShowQueryGenerateAlert = true
@@ -114,11 +147,79 @@ extension STTView: View {
       resetSpeechRecognition()
       speechRecognizer.onFinish = nil
     }
+    .sheet(isPresented: $isShowSearchResult, onDismiss: {
+      speechRecognizer.resetTranscript()
+      speechRecognizer.stopTranscribing()
+      speechRecognizer.onFinish = nil
+      musicManager.stopPreview()
+    }) {
+      if let item = item {
+        VStack(spacing: 10) {
+          if let artworkURL = item.artworkURL {
+            AsyncImage(url: artworkURL) { image in
+              image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+            } placeholder: {
+              ProgressView()
+            }
+            .frame(width: 270, height: 270)
+            .clipShape(.rect(cornerRadius: 30))
+          }
+          
+          Text(item.title)
+            .font(.headline)
+          
+          Text(item.artist)
+            .font(.subheadline)
+            .foregroundStyle(.gray)
+          
+          HStack {
+            
+            Button(action:{
+              isShowSearchResult = false
+            }) {
+              Text("다시 노래 찾기")
+            }
+            
+            Button(action: {
+              self.item = item
+              isShowSearchResult = false
+              
+            }) {
+              Text("연습하러 가기")
+            }
+          }
+        }
+        .onAppear {
+          if let url = item.previewURL {
+            musicManager.playPreview(for: url)
+          }
+        }
+      } else {
+        VStack {
+          Text("요청하신 노래를 찾지 못했습니다. \n다시 검색해주세요.")
+          HStack {
+            
+            Button(action:{
+              isShowSearchResult = false
+            }) {
+              Text("처음으로 가기")
+            }
+            
+            Button(action: {
+              isShowSearchResult = false
+            }) {
+              Text("다시 노래 찾기")
+            }
+          }
+        }
+      }
+    }
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }
       isShowRecognizerAlert = true
     }
-
     .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
       Button(action: {
         isShowPermissionAlert = false
