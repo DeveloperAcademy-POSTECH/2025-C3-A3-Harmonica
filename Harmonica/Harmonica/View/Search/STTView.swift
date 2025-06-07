@@ -24,7 +24,8 @@ struct STTView {
   @State private var isShowSearchResult = false
   @State private var isShowSearchResultAlert = false
   
-  
+  @State private var selectedSongID: String?
+  @State private var navigateToDetail = false
 }
 
 extension STTView {
@@ -77,8 +78,8 @@ extension STTView {
         item = result
         isShowSearchResult = true
       } catch {
-        songSearchErrorMessage = error.localizedDescription
-        isShowSearchResult = true
+        songSearchErrorMessage = "에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
+        isShowSearchResultAlert = true
       }
       isLoading = false
     }
@@ -127,7 +128,14 @@ extension STTView: View {
           .padding()
       }
     }
+    .navigationDestination(isPresented: $navigateToDetail) {
+      if let id = selectedSongID {
+        NavigationTestView(id: id)
+      }
+    }
     .onAppear {
+      selectedSongID = nil
+      
       Task {
         guard await checkSTTPermission() else { return }
         guard await checkMusicPermission() else { return }
@@ -138,134 +146,161 @@ extension STTView: View {
     .onDisappear {
       resetRecognizer()
     }
-    .sheet(isPresented: $isShowSearchResult, onDismiss: {
-      resetRecognizer()
-      musicManager.stopPreview()
-    }) {
-      if let item = item {
-        VStack(spacing: 10) {
-          if let artworkURL = item.artworkURL {
-            AsyncImage(url: artworkURL) { image in
-              image
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-            } placeholder: {
-              ProgressView()
-            }
-            .frame(width: 270, height: 270)
-            .clipShape(.rect(cornerRadius: 30))
-          }
-          
-          Text(item.title)
-            .font(.headline)
-          
-          Text(item.artist)
-            .font(.subheadline)
-            .foregroundStyle(.gray)
-          
-          HStack {
-            
-            Button(action:{
-              isShowSearchResult = false
-            }) {
-              Text("다시 노래 찾기")
+    .sheet(
+      isPresented: $isShowSearchResult,
+      onDismiss: {
+        resetRecognizer()
+        musicManager.stopPreview()
+        
+        if selectedSongID != nil {
+          navigateToDetail = true
+        } else {
+          startSTT()
+        }
+      }) {
+        if let item = item {
+          VStack(spacing: 10) {
+            if let artworkURL = item.artworkURL {
+              AsyncImage(url: artworkURL) { image in
+                image
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+              } placeholder: {
+                ProgressView()
+              }
+              .frame(width: 270, height: 270)
+              .clipShape(.rect(cornerRadius: 30))
             }
             
-            Button(action: {
-              self.item = item
-              isShowSearchResult = false
+            Text(item.title)
+              .font(.headline)
+            
+            Text(item.artist)
+              .font(.subheadline)
+              .foregroundStyle(.gray)
+            
+            HStack {
               
-            }) {
-              Text("연습하러 가기")
+              Button(action:{
+                isShowSearchResult = false
+              }) {
+                Text("다시 노래 찾기")
+              }
+              
+              Button(action: {
+                selectedSongID = item.id
+                isShowSearchResult = false
+              }) {
+                Text("연습하러 가기")
+              }
+            }
+          }
+          .onAppear {
+            if let url = item.previewURL {
+              musicManager.playPreview(for: url)
+            }
+          }
+        } else {
+          VStack {
+            Text("요청하신 노래를 찾지 못했습니다. \n다시 검색해주세요.")
+            HStack {
+              
+              Button(action:{
+                isShowSearchResult = false
+              }) {
+                Text("처음으로 가기")
+              }
+              
+              Button(action: {
+                isShowSearchResult = false
+              }) {
+                Text("다시 노래 찾기")
+              }
             }
           }
         }
-        .onAppear {
-          if let url = item.previewURL {
-            musicManager.playPreview(for: url)
+      }
+      .onChange(of: speechRecognizer.errorMessage) { _, new in
+        guard new != nil else { return }
+        isShowRecognizerAlert = true
+      }
+      .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
+        Button(action: {
+          isShowPermissionAlert = false
+          permissionMessage = ""
+        }) {
+          Text("취소")
+        }
+        
+        Button(action: {
+          if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
           }
+        }) {
+          Text("설정으로 이동")
         }
-      } else {
-        VStack {
-          Text("요청하신 노래를 찾지 못했습니다. \n다시 검색해주세요.")
-          HStack {
-            
-            Button(action:{
-              isShowSearchResult = false
-            }) {
-              Text("처음으로 가기")
-            }
-            
-            Button(action: {
-              isShowSearchResult = false
-            }) {
-              Text("다시 노래 찾기")
-            }
+        
+      } message: {
+        Text(permissionMessage)
+      }
+      .alert("애플 뮤직 권한 요청", isPresented: $isShowMusicKitAlert) {
+        Button(action: {
+          isShowMusicKitAlert = false
+          musicPermisionMessage = ""
+        }) {
+          Text("취소")
+        }
+        
+        Button(action: {
+          if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
           }
+        }) {
+          Text("설정으로 이동")
         }
+        
+      } message: {
+        Text(musicPermisionMessage)
       }
-    }
-    .onChange(of: speechRecognizer.errorMessage) { _, new in
-      guard new != nil else { return }
-      isShowRecognizerAlert = true
-    }
-    .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
-      Button(action: {
-        isShowPermissionAlert = false
-        permissionMessage = ""
-      }) {
-        Text("취소")
-      }
-      
-      Button(action: {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-          UIApplication.shared.open(url)
+      .alert("음성 인식 오류", isPresented: $isShowRecognizerAlert) {
+        Button(action: {
+          speechRecognizer.errorMessage = nil
+          isShowRecognizerAlert = false
+        }) {
+          Text("확인")
         }
-      }) {
-        Text("설정으로 이동")
+      } message: {
+        Text(speechRecognizer.errorMessage ?? "")
       }
-      
-    } message: {
-      Text(permissionMessage)
-    }
-    .alert("애플 뮤직 권한 요청", isPresented: $isShowMusicKitAlert) {
-      Button(action: {
-        isShowMusicKitAlert = false
-        musicPermisionMessage = ""
-      }) {
-        Text("취소")
-      }
-      
-      Button(action: {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-          UIApplication.shared.open(url)
+      .alert("쿼리 생성 오류", isPresented: $isShowQueryGenerateAlert) {
+        Button(action: {
+          queryGenerateMessage = ""
+          isShowQueryGenerateAlert = false
+        }) {
+          Text("확인")
         }
-      }) {
-        Text("설정으로 이동")
+      } message: {
+        Text(queryGenerateMessage)
       }
-      
-    } message: {
-      Text(musicPermisionMessage)
-    }
-    .alert("음성 인식 오류", isPresented: $isShowRecognizerAlert) {
-      Button(action: {
-        speechRecognizer.errorMessage = nil
-        isShowPermissionAlert = false
-      }) {
-        Text("확인")
+      .alert("노래 검색 오류", isPresented: $isShowSearchResultAlert) {
+        Button(action: {
+          isShowSearchResultAlert = false
+          songSearchErrorMessage = nil
+        }) {
+          Text("확인")
+        }
+      } message: {
+        Text(songSearchErrorMessage ?? "알 수 없는 오류")
       }
-    } message: {
-      Text(speechRecognizer.errorMessage ?? "")
-    }
-    .alert("쿼리 생성 오류", isPresented: $isShowQueryGenerateAlert) {
-      Button(action: {
-        queryGenerateMessage = ""
-        isShowQueryGenerateAlert = false
-      }) {
-        Text("확인")
-      }
-    } message: {
-      Text(queryGenerateMessage)
+  }
+}
+
+struct NavigationTestView: View {
+  let id: String
+  
+  var body: some View {
+    VStack {
+      Text("노래: \(id)")
     }
   }
 }
