@@ -1,4 +1,5 @@
 import AVFoundation
+import MusicKit
 import Speech
 
 enum MicPermissionStatus {
@@ -11,6 +12,13 @@ enum SpeechPermissionStatus {
   case authorized
   case denied
   case restricted
+  case notDetermined
+}
+
+enum MusicPermissionStatus {
+  case authorized
+  case restricted
+  case denied
   case notDetermined
 }
 
@@ -50,6 +58,22 @@ struct PermissionManager {
           continuation.resume(returning: .notDetermined)
         }
       }
+    }
+  }
+  
+  static func requestMusicPermission() async -> MusicPermissionStatus {
+    let status = await MusicAuthorization.request()
+    switch status {
+    case .notDetermined:
+      return .notDetermined
+    case .denied:
+      return .denied
+    case .restricted:
+      return .restricted
+    case .authorized:
+      return .authorized
+    @unknown default:
+      return .notDetermined
     }
   }
   
