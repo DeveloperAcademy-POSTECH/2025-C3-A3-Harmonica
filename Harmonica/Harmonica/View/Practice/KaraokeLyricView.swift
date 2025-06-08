@@ -21,7 +21,7 @@ struct KaraokeLyricView: View {
     @State private var nextstartTime: Date = Date()
     
     // 음악 재생 관련 State
-    let song: Song // 받아온 노래 정보
+    let songInfo: SongInfo // 받아온 노래 정보
     @State private var player: AVPlayer = AVPlayer()
     @State private var mode: PlayMode = .ar
     @State private var currentTime: Double = 0
@@ -68,11 +68,11 @@ struct KaraokeLyricView: View {
                 replay()
             }
             
-            Text(song.title)
+            Text(songInfo.title)
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text(song.artist)
+            Text(songInfo.artist)
                 .font(.subheadline)
             
             if let count = countdown {
@@ -232,8 +232,8 @@ struct KaraokeLyricView: View {
     }
     
     func loadLyrics() {
-        guard let path = Bundle.main.path(forResource: song.lyricsFileName, ofType: "json") else {
-            print("가사 파일을 찾을 수 없습니다: \(song.lyricsFileName)")
+        guard let path = Bundle.main.path(forResource: songInfo.lyricsFileName, ofType: "json") else {
+            print("가사 파일을 찾을 수 없습니다: \(songInfo.lyricsFileName)")
             return
         }
         
@@ -330,7 +330,7 @@ struct KaraokeLyricView: View {
         guard currentSegmentIndex < segments.count else { return }
         
         let segment = segments[currentSegmentIndex]
-        let fileName = mode == .ar ? song.arFileName : song.mrFileName
+        let fileName = mode == .ar ? songInfo.arFileName : songInfo.mrFileName
         
         guard let url = Bundle.main.url(forResource: fileName.replacingOccurrences(of: ".mp3", with: ""), withExtension: "mp3") else {
             print("오디오 파일을 찾을 수 없습니다: \(fileName)")
@@ -443,5 +443,5 @@ enum PlayMode {
 }
 
 #Preview {
-    KaraokeLyricView(song: .preview)
+    KaraokeLyricView(songInfo: .preview)
 }

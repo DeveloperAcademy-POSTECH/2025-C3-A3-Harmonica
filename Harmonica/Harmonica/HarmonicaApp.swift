@@ -12,6 +12,6 @@ struct HarmonicaApp: App {
 //            SongSearchView()
 //            SearchResultView()
         }
-        .modelContainer(for: Song.self)
+        .modelContainer(for: SongInfo.self)
     }
 }
