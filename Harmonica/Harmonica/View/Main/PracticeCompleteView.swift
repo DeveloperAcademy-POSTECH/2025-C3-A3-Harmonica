@@ -40,11 +40,11 @@ struct PracticeCompleteView: View {
                 Text(Array(CheeringText.values)[index])
                     .font(.system(size: 48, weight: .regular, design: .default))
                     .foregroundColor(.black)
-                    .padding(.bottom,55)
+                    .padding(.bottom, 140)
                 
-                Image("Monica_Happy")
-                    .padding(.bottom, 80)
-                    .padding(.leading, 60)
+                LottieView(animationName: "happy")
+                    .padding(.bottom, 30)
+                    .frame(width: 300, height: 271)
                 
                 
                 //TODO: 곡 끝까지 재생 후 종료 이외에 연습 중 종료는 버튼 어떻게 표시할 지 확인 후 텍스트 적용
