@@ -182,12 +182,18 @@ struct SongSearchView: View {
         }
         .navigationBarBackButtonHidden(true) // 기본 뒤로가기 버튼 숨김
         .onAppear {
+        #if targetEnvironment(simulator)
+            let mock = [MockSongs.song1, MockSongs.song2, MockSongs.song3, nil].randomElement()!
+            path.append(NavigationTarget.result(mock))
+        #else
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 withAnimation {
                     promptText = "지금 들려주세요. 듣고 있어요"
                 }
             }
+        #endif
         }
+        
         // matchedSong 감지하여 상태변경
         .onReceive(recognizer.$matchedSong) { item in
             if let item = item {

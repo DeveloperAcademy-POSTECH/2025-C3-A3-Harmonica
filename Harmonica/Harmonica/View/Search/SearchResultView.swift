@@ -4,7 +4,6 @@ import AVFoundation
 // 검색결과 미리듣기 자동재생
 @MainActor
 final class PreviewAudioPlayer: ObservableObject {
-    //    private var player: AVPlayer?
     private var queuePlayer: AVQueuePlayer?
     private var looper: AVPlayerLooper?
     
@@ -13,7 +12,7 @@ final class PreviewAudioPlayer: ObservableObject {
         let asset = AVURLAsset(url: url)
         let item = AVPlayerItem(asset: asset)
         
-        // 실제 재생을 준비
+        // 실제 재생 준비
         //        player = AVPlayer(playerItem: item)
         let player = AVQueuePlayer()
         self.queuePlayer = player
@@ -34,53 +33,66 @@ final class PreviewAudioPlayer: ObservableObject {
 // 검색결과 뷰
 struct SearchResultView: View {
     let songInfo: SongInfo?
-    @Binding var path: NavigationPath  // 처음(메인)으로 돌아가기
-    @Environment(\.dismiss) private var dismiss  // 뒤로가기용 환경변수
+    @Binding var path: NavigationPath
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var audioPlayer = PreviewAudioPlayer()
-    
+
     var body: some View {
-        VStack(spacing: 20) {
-            if let info = songInfo{
-                // 검색 성공시
+        Group {
+            if let info = songInfo {
                 VStack(spacing: 20) {
                     Text("찾으시는 곡이 맞나요?")
-                        .font(
-                            Font.custom("SF Pro", size: 64)
-                                .weight(.medium)
-                        )
+                        .font(Font.custom("SF Pro", size: 64).weight(.medium))
                         .multilineTextAlignment(.center)
                         .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                    Text(info.title).font(.title)
-                    Text(info.artist).font(.headline)
-                    
-                    if let artworkURL = info.artworkURL {
-                        AsyncImage(url: artworkURL) { image in
-                            image.resizable()
-                        } placeholder: {
-                            ProgressView()
+
+                    HStack {
+                        if let artworkURL = info.artworkURL {
+                            AsyncImage(url: artworkURL) { phase in
+                                switch phase {
+                                case .empty:
+                                    ZStack {
+                                        Color.gray.opacity(0.2)
+                                        ProgressView()
+                                    }
+                                case .success(let image):
+                                    image.resizable().scaledToFit()
+                                case .failure:
+                                    Image(systemName: "photo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.gray)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                            .frame(width: 200, height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .padding()
                         }
-                        .frame(width: 200, height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                        VStack {
+                            Text(info.artist).font(.headline)
+                            Text(info.title).font(.title)
+                        }
+                        .padding()
                     }
-                    Spacer()
-                }
-                .padding()
-                .task {
-                    if let url = songInfo?.previewURL {
-                        await audioPlayer.play(from: url)
+
+                    Button("다시 노래 찾기") {
+                        dismiss()
                     }
-                }
-                .onDisappear {
-                    audioPlayer.stop()
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 }
             } else {
-                // 검색 실패시
-                VStack(spacing: 16){
+                VStack(spacing: 16) {
                     Text("요청하신 노래를 찾지 못했습니다. 다시 검색해주세요.")
                         .font(.title2)
                         .foregroundColor(.gray)
+
                     HStack {
-                        // 처음으로 가기 버튼
                         Button("처음으로 가기") {
                             path = NavigationPath()
                         }
@@ -88,8 +100,7 @@ struct SearchResultView: View {
                         .background(Color.red)
                         .foregroundColor(.white)
                         .cornerRadius(10)
-                        
-                        // 다시 노래 찾기 버튼
+
                         Button("다시 노래 찾기") {
                             dismiss()
                         }
@@ -99,8 +110,32 @@ struct SearchResultView: View {
                         .cornerRadius(10)
                     }
                 }
-                .padding(.horizontal)
+                .padding()
             }
         }
+        .task {
+            if let url = songInfo?.previewURL {
+                await audioPlayer.play(from: url)
+            }
+        }
+        .onDisappear {
+            audioPlayer.stop()
+        }
+    }
+}
+
+// [테스트용]
+//class MockShazamRecognizer: ObservableObject {
+//    @Published var matchedSong: SHMediaItem?
+//    @Published var didNotFindSong: Bool = false
+//
+//    func simulateMatch() {
+//        // 직접 SHMediaItem을 모킹하려면 KVC 또는 SongInfo로 대체 필요
+//    }
+//}
+
+struct RandomSearchResultView_Previews: PreviewProvider {
+    static var previews: some View {
+        RandomSearchResultView()
     }
 }
