@@ -86,7 +86,7 @@ class MatchDelegate: NSObject, SHSessionDelegate {
 
 // 네비게이션 타겟
 enum NavigationTarget: Hashable {
-    case result(SongInfo)
+    case result(SongInfo?)
 }
 
 // 음악인식 검색 뷰
@@ -175,8 +175,8 @@ struct SongSearchView: View {
             }
             .navigationDestination(for: NavigationTarget.self) { target in
                 switch target {
-                case .result(let info):
-                        SearchResultView(songInfo: info)
+                case .result(let songInfo):
+                    SearchResultView(songInfo: songInfo, path: $path) // 바인딩 전달
                 }
             }
         }
@@ -197,7 +197,13 @@ struct SongSearchView: View {
                     artworkURL: item.artworkURL,
                     previewURL: item.safePreviewURL
                 )
-                path.append(NavigationTarget.result(info))
+                path.append(NavigationTarget.result(info)) // 검색성공 케이스
+            }
+        }
+        
+        .onReceive(recognizer.$didNotFindSong) { notFound in
+            if notFound {
+                path.append(NavigationTarget.result(nil)) // 검색실패 케이스
             }
         }
     }

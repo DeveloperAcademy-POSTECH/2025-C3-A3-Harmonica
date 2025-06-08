@@ -25,121 +25,82 @@ final class PreviewAudioPlayer: ObservableObject {
     }
     
     func stop() {
-        //        player?.pause()
-        //        player = nil
         queuePlayer?.pause()
         queuePlayer = nil
         looper = nil
     }
 }
 
-// 검색결과를 시각적으로 표시하는 뷰
+// 검색결과 뷰
 struct SearchResultView: View {
-    let songInfo: SongInfo
-    
+    let songInfo: SongInfo?
+    @Binding var path: NavigationPath  // 처음(메인)으로 돌아가기
+    @Environment(\.dismiss) private var dismiss  // 뒤로가기용 환경변수
     @StateObject private var audioPlayer = PreviewAudioPlayer()
     
     var body: some View {
-        VStack{
-            Text("찾으시던게 이 노래인가요?")
-                .font(
-                    Font.custom("SF Pro", size: 64)
-                        .weight(.medium)
-                )
-                .multilineTextAlignment(.center)
-                .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-            ZStack{
-                Rectangle()
-                    .foregroundColor(.clear)
-                    .frame(width: 896, height: 366)
-                    .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                    .cornerRadius(20)
-                Rectangle()
-                    .foregroundColor(.clear)
-                    .frame(width: 848, height: 318)
-                    .background(Color(red: 0.85, green: 0.85, blue: 0.85))
-                    .cornerRadius(30)
-                HStack{
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .frame(width: 270, height: 270)
-                        .background(Color(red: 0.7, green: 0.7, blue: 0.7))
-                        .cornerRadius(100)
-                    Text(songInfo.title)
+        VStack(spacing: 20) {
+            if let info = songInfo{
+                // 검색 성공시
+                VStack(spacing: 20) {
+                    Text("찾으시는 곡이 맞나요?")
                         .font(
                             Font.custom("SF Pro", size: 64)
                                 .weight(.medium)
                         )
+                        .multilineTextAlignment(.center)
                         .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                }
-            }
-            ZStack{
-                Rectangle()
-                    .foregroundColor(.clear)
-                    .frame(width: 910, height: 205)
-                    .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                    .cornerRadius(20)
-                HStack{
-                    ZStack{
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 419, height: 157)
-                            .background(Color(red: 0.75, green: 0.75, blue: 0.75))
-                            .cornerRadius(30)
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 362, height: 121)
-                            .background(Color(red: 0.85, green: 0.85, blue: 0.85))
-                            .cornerRadius(100)
-                            .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 100)
-                                    .inset(by: 1.5)
-                                    .stroke(.white.opacity(0.7), lineWidth: 3)
-                            )
-                        Text("다시 노래 찾기")
-                            .font(
-                                Font.custom("SF Pro", size: 48)
-                                    .weight(.medium)
-                            )
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
+                    Text(info.title).font(.title)
+                    Text(info.artist).font(.headline)
+                    
+                    if let artworkURL = info.artworkURL {
+                        AsyncImage(url: artworkURL) { image in
+                            image.resizable()
+                        } placeholder: {
+                            ProgressView()
+                        }
+                        .frame(width: 200, height: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    ZStack{
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 419, height: 157)
-                            .background(Color(red: 0.83, green: 0.81, blue: 0.78))
-                            .cornerRadius(30)
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 362, height: 121)
-                            .background(Color(red: 0.85, green: 0.85, blue: 0.85))
-                            .cornerRadius(100)
-                            .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 100)
-                                    .inset(by: 1.5)
-                                    .stroke(.white.opacity(0.7), lineWidth: 3)
-                            )
-                        Text("연습하러가기")
-                            .font(
-                                Font.custom("SF Pro", size: 48)
-                                    .weight(.medium)
-                            )
-                            .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
+                    Spacer()
+                }
+                .padding()
+                .task {
+                    if let url = songInfo?.previewURL {
+                        await audioPlayer.play(from: url)
                     }
                 }
+                .onDisappear {
+                    audioPlayer.stop()
+                }
+            } else {
+                // 검색 실패시
+                VStack(spacing: 16){
+                    Text("요청하신 노래를 찾지 못했습니다. 다시 검색해주세요.")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                    HStack {
+                        // 처음으로 가기 버튼
+                        Button("처음으로 가기") {
+                            path = NavigationPath()
+                        }
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        
+                        // 다시 노래 찾기 버튼
+                        Button("다시 노래 찾기") {
+                            dismiss()
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal)
             }
-        }
-        .task {
-            if let previewURL = songInfo.previewURL {
-                await audioPlayer.play(from: previewURL)
-            }
-        }
-        .onDisappear {
-            audioPlayer.stop()
         }
     }
 }
-
