@@ -20,12 +20,13 @@ class Song {
         self.arFileName = arFileName
         self.mrFileName = mrFileName
         self.lyricsFileName = lyricsFileName
-        self.bpm = 100
+        self.bpm = bpm
     }
 }
 
 extension Song {
     static var preview: Song {
-        Song(id: 1000, title: "내 여자 내 남자", artist: "배금성", arFileName: "1_ar.mp3", mrFileName: "1_mr.mp3", lyricsFileName: "1_lyrics", bpm: 100)
+        // 실제 id: 1641943955, 1759969510
+        Song(id: 1, title: "내 여자 내 남자", artist: "배금성", arFileName: "1_ar.mp3", mrFileName: "1_mr.mp3", lyricsFileName: "1_lyrics", bpm: 100)
     }
 }

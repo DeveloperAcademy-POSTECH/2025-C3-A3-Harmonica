@@ -3,12 +3,9 @@ import AVFoundation
 import SwiftData
 
 struct KaraokeLyricView: View {
-    // MARK: LyricProvider에서 json 파일 입력해서 가져오기
-    let lyricProvider = LyricProvider(jsonFileName: "내 여자 내 남자 가삭")
-
     // MARK: - State
     @State private var currentLineIndex: Int = 0
-    @State private var currentLine: LyricLine = LyricLine(text: "내 여자 내 남자 - 배금성", timings: [0.00, 1.03, 1.3, 1.43, 1.65, 2.27, 2.57, 2.85, 3.07, 4.1, 4.4, 4.7, 5.0, 5.3, 5.7, 6.0])
+    @State private var currentLine: LyricLine = LyricLine(text: "", timings: [])
     @State private var currentCharacterIndex: Int = 0
     @State private var currentCharacterProgress: CGFloat = 0.0
     @State private var currentCharDuration: Double = 0.0
@@ -17,7 +14,7 @@ struct KaraokeLyricView: View {
     @State private var countdownTimer: Timer?
     
     @State private var nextLineIndex: Int = 1
-    @State private var nextLine: LyricLine = LyricLine(text: "배금성", timings: [0.00, 1.03, 1.3, 1.43])
+    @State private var nextLine: LyricLine = LyricLine(text: "", timings: [])
     @State private var nextCharacterIndex: Int = 0
     @State private var nextCharacterProgress: CGFloat = 0.0
     @State private var nextCharDuration: Double = 0.0
@@ -29,11 +26,19 @@ struct KaraokeLyricView: View {
     @State private var mode: PlayMode = .ar
     @State private var currentTime: Double = 0
     @State private var playbackTimer: Timer?
-    // 통합?
+    
+    // 통합
     @State private var currentSegmentIndex = 0
     @State private var segments: [LyricSegment] = []
+    @State private var lyricLines: [LyricLine] = []
 
     let timer = Timer.publish(every: 0.016, on: .main, in: .common).autoconnect() // ~60fps
+    
+    var hasNextLine: Bool {
+        nextLineIndex < lyricLines.count &&
+        nextLineIndex < segments.count &&
+        segments[currentSegmentIndex].index == segments[nextLineIndex].index
+    }
 
     // MARK: - Derived property for current lyric line
     var lyricsWithDuration: [(String, Double)] {
@@ -70,38 +75,19 @@ struct KaraokeLyricView: View {
             Text(song.artist)
                 .font(.subheadline)
             
-            if !segments.isEmpty && currentSegmentIndex < segments.count {
-                VStack(spacing: 10) {
-                    Text("소절 \(currentSegmentIndex + 1) / \(segments.count)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text(segments[currentSegmentIndex].lyric)
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-                }
-            }
-            
             if let count = countdown {
-                Text(["하나", "둘", "셋", "넷"][count])
+                Text(["4", "3", "2", "1"][count])
                     .font(.largeTitle)
                     .bold()
                     .transition(.opacity)
             }
-            
-            Text("\(currentLineIndex)")
 
             ZStack(alignment: .leading) {
-                
                 Text(fullText)
                     .foregroundColor(.gray)
                     .bold()
 
                 HStack(spacing: 0) {
-                    
                     //이미 파란색으로 채워진 텍스트들
                     Text(highlightedText)
                         .foregroundColor(.blue)
@@ -124,36 +110,38 @@ struct KaraokeLyricView: View {
             }
             .font(.title)
             .padding()
-            ZStack(alignment: .leading) {
-                
-                Text(nextfullText)
-                    .foregroundColor(.gray)
-                    .bold()
-
-                HStack(spacing: 0) {
-                    
-                    //이미 파란색으로 채워진 텍스트들
-                    Text(nexthighlightedtext)
-                        .foregroundColor(.blue)
+            
+            if hasNextLine {
+                ZStack(alignment: .leading) {
+                    Text(nextfullText)
+                        .foregroundColor(.gray)
                         .bold()
-
-                    //두개로 label을 나눠서 마스크 & 텍스트를 두개로 해버리는게 나을까?
-                    //아니면 mask가 Text 위치를 따라갈 수 있는 방법이 있을까?
-                    if !nextcurrentChar.isEmpty {
-                        Text(nextcurrentChar)
+                    
+                    HStack(spacing: 0) {
+                        
+                        //이미 파란색으로 채워진 텍스트들
+                        Text(nexthighlightedtext)
                             .foregroundColor(.blue)
                             .bold()
-                            .mask(
-                                GeometryReader { geo in
-                                    Rectangle()
-                                        .frame(width: geo.size.width * nextCharacterProgress)
-                                }
-                            )
+                        
+                        //두개로 label을 나눠서 마스크 & 텍스트를 두개로 해버리는게 나을까?
+                        //아니면 mask가 Text 위치를 따라갈 수 있는 방법이 있을까?
+                        if !nextcurrentChar.isEmpty {
+                            Text(nextcurrentChar)
+                                .foregroundColor(.blue)
+                                .bold()
+                                .mask(
+                                    GeometryReader { geo in
+                                        Rectangle()
+                                            .frame(width: geo.size.width * nextCharacterProgress)
+                                    }
+                                )
+                        }
                     }
                 }
+                .font(.title)
+                .padding()
             }
-            .font(.title)
-            .padding()
 
             HStack(spacing: 30){
                 Button(action: previous) {
@@ -177,41 +165,23 @@ struct KaraokeLyricView: View {
             setupAudio()
             loadLyrics()
             
-            let lines = lyricProvider.lyricLines
-            if !lines.isEmpty {
-                currentLine = lines[currentLineIndex]
+            if !lyricLines.isEmpty {
+                currentLine = lyricLines[currentLineIndex]
                 currentCharDuration = lyricsWithDuration.first?.1 ?? 0.0
                 startTime = Date()
-            }
-            
-            if !lines.isEmpty {
-                nextLine = lines[nextLineIndex]
-                nextCharDuration = NextlyricsWithDuration.first?.1 ?? 0.0
-                nextstartTime = Date()
+                
+                if lyricLines.count > 1 && hasNextLine {
+                    nextLine = lyricLines[nextLineIndex]
+                    nextCharDuration = NextlyricsWithDuration.first?.1 ?? 0.0
+                    nextstartTime = Date()
+                }
             }
         }
         .onDisappear {
             stopPlayback()
         }
         
-        //1/60초 마다 (개빨리) 실행됨. 카운트 다운 중이면 안하고 characterProgress = 지나간 시간 / 글자 총 지속시간 형태로 진행상태 확인하며 characterProgress가 1.0 이상이면 다음 글자로 이동
-        .onReceive(timer) { _ in
-            guard countdown == nil else { return }
-            guard nextCharacterIndex < NextlyricsWithDuration.count else { return }
-
-            let elapsed = Date().timeIntervalSince(nextstartTime)
-            let duration = NextlyricsWithDuration[nextCharacterIndex].1
-            nextCharacterProgress = min(1.0, elapsed / duration)
-
-            if nextCharacterProgress >= 1.0 {
-                nextCharacterIndex += 1
-                nextCharacterProgress = 0.0
-                if nextCharacterIndex < NextlyricsWithDuration.count {
-                    nextCharDuration = NextlyricsWithDuration[nextCharacterIndex].1
-                    nextstartTime = Date()
-                }
-            }
-        }
+        // 1/60초 마다 실행됨. 카운트 다운 중이면 안하고 characterProgress = 지나간 시간 / 글자 총 지속시간 형태로 진행상태 확인하며 characterProgress가 1.0 이상이면 다음 글자로 이동
         .onReceive(timer) { _ in
             guard countdown == nil else { return }
             guard currentCharacterIndex < lyricsWithDuration.count else { return }
@@ -226,6 +196,24 @@ struct KaraokeLyricView: View {
                 if currentCharacterIndex < lyricsWithDuration.count {
                     currentCharDuration = lyricsWithDuration[currentCharacterIndex].1
                     startTime = Date()
+                }
+            }
+        }
+        .onReceive(timer) { _ in
+            guard countdown == nil else { return }
+            guard hasNextLine else { return }
+            guard nextCharacterIndex < NextlyricsWithDuration.count else { return }
+
+            let elapsed = Date().timeIntervalSince(nextstartTime)
+            let duration = NextlyricsWithDuration[nextCharacterIndex].1
+            nextCharacterProgress = min(1.0, elapsed / duration)
+
+            if nextCharacterProgress >= 1.0 {
+                nextCharacterIndex += 1
+                nextCharacterProgress = 0.0
+                if nextCharacterIndex < NextlyricsWithDuration.count {
+                    nextCharDuration = NextlyricsWithDuration[nextCharacterIndex].1
+                    nextstartTime = Date()
                 }
             }
         }
@@ -252,7 +240,9 @@ struct KaraokeLyricView: View {
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: path))
             let lyricDataArray = try JSONDecoder().decode([LyricData].self, from: data)
+            
             segments = parseLyricsFromJSON(lyricDataArray: lyricDataArray)
+            lyricLines = createLyricLines(from: lyricDataArray)
         } catch {
             print("가사 파일 읽기 실패: \(error)")
         }
@@ -286,55 +276,58 @@ struct KaraokeLyricView: View {
         return segments
     }
     
+    func createLyricLines(from lyricDataArray: [LyricData]) -> [LyricLine] {
+        return lyricDataArray
+            .sorted(by: { $0.index < $1.index })
+            .map { LyricLine(text: $0.Lyric, timings: $0.timingArray) }
+    }
+    
+    func resetCharacterStates() {
+        currentCharacterIndex = 0
+        nextCharacterIndex = 0
+        currentCharacterProgress = 0
+        nextCharacterProgress = 0
+        countdown = 0
+        startCountdown()
+    }
+    
     func previous() {
         print("=== PREVIOUS")
         guard currentSegmentIndex > 0 else { return }
-        currentSegmentIndex -= 1
-        print(currentSegmentIndex)
+        currentSegmentIndex -= 2
         replay()
         
-        
-        let lines = lyricProvider.lyricLines
         if currentLineIndex > 1 {
             currentLineIndex -= 2
-            currentLine = lines[currentLineIndex]
+            currentLine = lyricLines[currentLineIndex]
             nextLineIndex = currentLineIndex + 1
-            nextLine = lines[nextLineIndex]
-            currentCharacterIndex = 0
-            nextCharacterIndex = 0
-            currentCharacterProgress = 0
-            nextCharacterProgress = 0
-            countdown = 0
-            startCountdown()
+            if nextLineIndex < lyricLines.count {
+                nextLine = lyricLines[nextLineIndex]
+            }
+            resetCharacterStates()
         }
         
     }
     
     func next() {
-        print("=== NEXT!")
+        print("=== NEXT")
         guard currentSegmentIndex < segments.count - 1 else { return }
-        currentSegmentIndex += 1
-        print(currentSegmentIndex)
+        currentSegmentIndex += 2
         replay()
         
-        let lines = lyricProvider.lyricLines
-        if currentLineIndex + 2 < lines.count {
+        if currentLineIndex + 2 < lyricLines.count {
             currentLineIndex += 2
-            currentLine = lines[currentLineIndex]
+            currentLine = lyricLines[currentLineIndex]
             nextLineIndex = currentLineIndex + 1
-            nextLine = lines[nextLineIndex]
-            currentCharacterIndex = 0
-            nextCharacterIndex = 0
-            currentCharacterProgress = 0
-            nextCharacterProgress = 0
-            countdown = 0
-            startCountdown()
+            if nextLineIndex < lyricLines.count {
+                nextLine = lyricLines[nextLineIndex]
+            }
+            resetCharacterStates()
         }
     }
     
     func replay() {
         guard currentSegmentIndex < segments.count else { return }
-        print(currentSegmentIndex)
         
         let segment = segments[currentSegmentIndex]
         let fileName = mode == .ar ? song.arFileName : song.mrFileName
@@ -353,11 +346,12 @@ struct KaraokeLyricView: View {
             startPlaybackTimer(segment: segment)
         }
         
-        let lines = lyricProvider.lyricLines
-        if currentLineIndex >= 0 {
-            currentLine = lines[currentLineIndex]
+        if currentLineIndex >= 0 && currentLineIndex < lyricLines.count {
+            currentLine = lyricLines[currentLineIndex]
             nextLineIndex = currentLineIndex + 1
-            nextLine = lines[nextLineIndex]
+            if nextLineIndex < lyricLines.count {
+                nextLine = lyricLines[nextLineIndex]
+            }
             currentCharacterIndex = 0
             nextCharacterIndex = 0
             currentCharacterProgress = 0
@@ -392,26 +386,38 @@ struct KaraokeLyricView: View {
         stopTimer()
     }
 
-    // 이건 그냥 하나 둘 셋 넷 카운터 딱히 필요는 없슴
+    // 하나 둘 셋 넷 카운터
     private func startCountdown() {
         countdownTimer?.invalidate()
         
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.37, repeats: true) { timer in
-            if let currentCount = countdown {
-                countdown! += 1
-                if countdown! >= 4 {
-                    countdown = nil
-                    currentCharDuration = lyricsWithDuration.first?.1 ?? 0.0
-                    startTime = Date()
+            countdown! += 1
+            if countdown! >= 4 {
+                countdown = nil
+                currentCharDuration = lyricsWithDuration.first?.1 ?? 0.0
+                startTime = Date()
+                if hasNextLine {
                     nextCharDuration = NextlyricsWithDuration.first?.1 ?? 0.0
                     nextstartTime = Date()
-                    timer.invalidate()
-                    countdownTimer = nil
                 }
-            } else {
-                print("=== startCountdown ERROR")
+                timer.invalidate()
+                countdownTimer = nil
+                
             }
         }
+    }
+}
+
+// MARK: - Data Models
+struct LyricLine {
+    let text: String
+    let timings: [Double]
+    
+    /// 각 글자별 지속 시간을 계산해 반환
+    var characterDurations: [(String, Double)] {
+        let chars = Array(text).map { String($0) }
+        let durations = zip(timings, timings.dropFirst()).map { $1 - $0 }
+        return Array(zip(chars, durations))
     }
 }
 
@@ -436,6 +442,6 @@ enum PlayMode {
     case mr
 }
 
-#Preview{
+#Preview {
     KaraokeLyricView(song: .preview)
 }
