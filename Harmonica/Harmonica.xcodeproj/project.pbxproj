@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		329BC1022DF57EF900D913E7 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 329BC1012DF57EF900D913E7 /* Lottie */; };
+		32C496B32DF4ABD100E4E2AC /* Glur in Frameworks */ = {isa = PBXBuildFile; productRef = 32C496B22DF4ABD100E4E2AC /* Glur */; };
 		EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */; };
 /* End PBXBuildFile section */
 
@@ -27,7 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32C496B32DF4ABD100E4E2AC /* Glur in Frameworks */,
 				EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */,
+				329BC1022DF57EF900D913E7 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +75,8 @@
 			name = Harmonica;
 			packageProductDependencies = (
 				EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */,
+				32C496B22DF4ABD100E4E2AC /* Glur */,
+				329BC1012DF57EF900D913E7 /* Lottie */,
 			);
 			productName = Harmonica;
 			productReference = 9434108C2DE6EF390002634E /* Harmonica.app */;
@@ -103,6 +109,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				32C496B12DF4ABD100E4E2AC /* XCRemoteSwiftPackageReference "Glur" */,
+				329BC1002DF57EF900D913E7 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9434108D2DE6EF390002634E /* Products */;
@@ -265,14 +273,16 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "미디어 접근을 허용해주세요";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "“음성 입력 기능을 사용하기 위해 마이크 접근 권한이 필요합니다.”";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "“음성 입력과 명령 실행을 위해 음성 인식 권한이 필요합니다.”";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationLandscapeRight;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -281,12 +291,16 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ADA4th.Harmonica;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = HarmonicaReal;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -301,14 +315,16 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "미디어 접근을 허용해주세요";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "“음성 입력 기능을 사용하기 위해 마이크 접근 권한이 필요합니다.”";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "“음성 입력과 명령 실행을 위해 음성 인식 권한이 필요합니다.”";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationLandscapeRight;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -317,12 +333,16 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ADA4th.Harmonica;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = HarmonicaReal;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};
@@ -350,6 +370,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		329BC1002DF57EF900D913E7 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
+		32C496B12DF4ABD100E4E2AC /* XCRemoteSwiftPackageReference "Glur" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/joogps/Glur.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
 		EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -361,6 +397,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		329BC1012DF57EF900D913E7 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 329BC1002DF57EF900D913E7 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		32C496B22DF4ABD100E4E2AC /* Glur */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 32C496B12DF4ABD100E4E2AC /* XCRemoteSwiftPackageReference "Glur" */;
+			productName = Glur;
+		};
 		EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
