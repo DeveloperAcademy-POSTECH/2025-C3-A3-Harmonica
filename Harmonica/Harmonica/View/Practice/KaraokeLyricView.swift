@@ -12,6 +12,7 @@ struct KaraokeLyricView: View {
     @State private var startTime: Date = Date()
     @State private var countdown: Int? = nil
     @State private var countdownTimer: Timer?
+    @State private var isCountingDown = false
     
     @State private var nextLineIndex: Int = 1
     @State private var nextLine: LyricLine = LyricLine(text: "", timings: [])
@@ -21,13 +22,12 @@ struct KaraokeLyricView: View {
     @State private var nextstartTime: Date = Date()
     
     // 음악 재생 관련 State
-    let songInfo: SongInfo // 받아온 노래 정보
+    let songInfo: SongInfo
     @State private var player: AVPlayer = AVPlayer()
     @State private var mode: PlayMode = .ar
     @State private var currentTime: Double = 0
     @State private var playbackTimer: Timer?
-    
-    // 통합
+    @State private var autoProgressTimer: Timer?
     @State private var currentSegmentIndex = 0
     @State private var segments: [LyricSegment] = []
     @State private var lyricLines: [LyricLine] = []
@@ -35,12 +35,12 @@ struct KaraokeLyricView: View {
     let timer = Timer.publish(every: 0.016, on: .main, in: .common).autoconnect() // ~60fps
     
     var hasNextLine: Bool {
-        nextLineIndex < lyricLines.count &&
-        nextLineIndex < segments.count &&
-        segments[currentSegmentIndex].index == segments[nextLineIndex].index
+        guard nextLineIndex < lyricLines.count,
+              nextLineIndex < segments.count,
+              currentSegmentIndex < segments.count else { return false }
+        return segments[currentSegmentIndex].index == segments[nextLineIndex].index
     }
 
-    // MARK: - Derived property for current lyric line
     var lyricsWithDuration: [(String, Double)] {
         currentLine.characterDurations
     }
@@ -58,15 +58,19 @@ struct KaraokeLyricView: View {
         let nextcurrentChar = nextCharacterIndex < NextlyricsWithDuration.count ? NextlyricsWithDuration[nextCharacterIndex].0 : ""
 
         VStack {
-            Picker("모드", selection: $mode) {
-                Text("AR (원곡)").tag(PlayMode.ar)
-                Text("MR (반주)").tag(PlayMode.mr)
+            Button(action: {
+                // 연습 종료 더미 버튼 - 기능 추가 필요
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.gray)
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .onChange(of: mode) { _, _ in
-                replay()
-            }
+            .padding()
+            
+            Text(mode == .ar ? "선창 (원곡)" : "후창 (반주)")
+                .font(.headline)
+                .foregroundColor(mode == .ar ? .red : .blue)
+                .padding(.horizontal)
             
             Text(songInfo.title)
                 .font(.title2)
@@ -74,6 +78,18 @@ struct KaraokeLyricView: View {
             
             Text(songInfo.artist)
                 .font(.subheadline)
+            
+            HStack(spacing: 20) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(getMetronomeCircleColor(for: index))
+                        .frame(width: 30, height: 30)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.gray, lineWidth: 2)
+                        )
+                }
+            }
             
             if let count = countdown {
                 Text(["4", "3", "2", "1"][count])
@@ -118,14 +134,10 @@ struct KaraokeLyricView: View {
                         .bold()
                     
                     HStack(spacing: 0) {
-                        
-                        //이미 파란색으로 채워진 텍스트들
                         Text(nexthighlightedtext)
                             .foregroundColor(.blue)
                             .bold()
                         
-                        //두개로 label을 나눠서 마스크 & 텍스트를 두개로 해버리는게 나을까?
-                        //아니면 mask가 Text 위치를 따라갈 수 있는 방법이 있을까?
                         if !nextcurrentChar.isEmpty {
                             Text(nextcurrentChar)
                                 .foregroundColor(.blue)
@@ -160,28 +172,18 @@ struct KaraokeLyricView: View {
             }
         }
 
-        //가사 줄 배열 불러오고, 첫 글자 재생 타이밍 설정
         .onAppear {
             setupAudio()
             loadLyrics()
             
             if !lyricLines.isEmpty {
-                currentLine = lyricLines[currentLineIndex]
-                currentCharDuration = lyricsWithDuration.first?.1 ?? 0.0
-                startTime = Date()
-                
-                if lyricLines.count > 1 && hasNextLine {
-                    nextLine = lyricLines[nextLineIndex]
-                    nextCharDuration = NextlyricsWithDuration.first?.1 ?? 0.0
-                    nextstartTime = Date()
-                }
+                updateCurrentLines()
             }
         }
         .onDisappear {
             stopPlayback()
         }
         
-        // 1/60초 마다 실행됨. 카운트 다운 중이면 안하고 characterProgress = 지나간 시간 / 글자 총 지속시간 형태로 진행상태 확인하며 characterProgress가 1.0 이상이면 다음 글자로 이동
         .onReceive(timer) { _ in
             guard countdown == nil else { return }
             guard currentCharacterIndex < lyricsWithDuration.count else { return }
@@ -229,6 +231,14 @@ struct KaraokeLyricView: View {
         } catch {
             print("오디오 세션 설정 실패: \(error)")
         }
+    }
+    
+    func getMetronomeCircleColor(for index: Int) -> Color {
+        // 더미 로직 - 수정 필요
+        if let count = countdown {
+            return index < count ? .blue : .clear
+        }
+        return .clear
     }
     
     func loadLyrics() {
@@ -282,6 +292,16 @@ struct KaraokeLyricView: View {
             .map { LyricLine(text: $0.Lyric, timings: $0.timingArray) }
     }
     
+    func updateCurrentLines() {
+        guard currentLineIndex < lyricLines.count else { return }
+        
+        currentLine = lyricLines[currentLineIndex]
+        nextLineIndex = currentLineIndex + 1
+        if nextLineIndex < lyricLines.count && hasNextLine {
+            nextLine = lyricLines[nextLineIndex]
+        }
+    }
+    
     func resetCharacterStates() {
         currentCharacterIndex = 0
         nextCharacterIndex = 0
@@ -291,46 +311,87 @@ struct KaraokeLyricView: View {
         startCountdown()
     }
     
+    func resetCharacterStatesForMR() {
+        currentCharacterIndex = 0
+        nextCharacterIndex = 0
+        currentCharacterProgress = 0
+        nextCharacterProgress = 0
+        countdown = 0
+        startCountdownForMR()
+    }
+    
     func previous() {
         print("=== PREVIOUS")
         guard currentSegmentIndex > 0 else { return }
-        currentSegmentIndex -= 2
-        replay()
         
-        if currentLineIndex > 1 {
-            currentLineIndex -= 2
-            currentLine = lyricLines[currentLineIndex]
-            nextLineIndex = currentLineIndex + 1
-            if nextLineIndex < lyricLines.count {
-                nextLine = lyricLines[nextLineIndex]
-            }
-            resetCharacterStates()
+        // 재생 중지 및 모드 초기화
+        stopPlayback()
+        mode = .ar
+        
+        let currentIndex = segments[currentSegmentIndex].index
+        var targetSegmentIndex = currentSegmentIndex - 1
+        
+        while targetSegmentIndex >= 0 && segments[targetSegmentIndex].index == currentIndex {
+            targetSegmentIndex -= 1
         }
         
+        if targetSegmentIndex >= 0 {
+            let targetIndex = segments[targetSegmentIndex].index
+            while targetSegmentIndex > 0 && segments[targetSegmentIndex - 1].index == targetIndex {
+                targetSegmentIndex -= 1
+            }
+            
+            currentSegmentIndex = targetSegmentIndex
+            currentLineIndex = findLineIndexBySegmentIndex(targetSegmentIndex)
+            updateCurrentLines()
+            replay()
+        }
     }
     
     func next() {
         print("=== NEXT")
         guard currentSegmentIndex < segments.count - 1 else { return }
-        currentSegmentIndex += 2
-        replay()
         
-        if currentLineIndex + 2 < lyricLines.count {
-            currentLineIndex += 2
-            currentLine = lyricLines[currentLineIndex]
-            nextLineIndex = currentLineIndex + 1
-            if nextLineIndex < lyricLines.count {
-                nextLine = lyricLines[nextLineIndex]
-            }
-            resetCharacterStates()
+        stopPlayback()
+        mode = .ar
+        
+        let currentIndex = segments[currentSegmentIndex].index
+        var targetSegmentIndex = currentSegmentIndex + 1
+        
+        while targetSegmentIndex < segments.count && segments[targetSegmentIndex].index == currentIndex {
+            targetSegmentIndex += 1
         }
+        
+        if targetSegmentIndex < segments.count {
+            currentSegmentIndex = targetSegmentIndex
+            currentLineIndex = findLineIndexBySegmentIndex(targetSegmentIndex)
+            updateCurrentLines()
+            replay()
+        }
+    }
+    
+    // 세그먼트 인덱스에 해당하는 가사 라인 인덱스 찾는 함수
+    func findLineIndexBySegmentIndex(_ segmentIndex: Int) -> Int {
+        guard segmentIndex < segments.count else { return 0 }
+        let targetIndex = segments[segmentIndex].index
+        
+        // 해당 index를 가진 첫 번째 라인 찾기
+        for (lineIndex, segment) in segments.enumerated() {
+            if segment.index == targetIndex {
+                return lineIndex
+            }
+        }
+        return segmentIndex // 찾지 못한 경우 segmentIndex 반환
     }
     
     func replay() {
         guard currentSegmentIndex < segments.count else { return }
         
+        stopPlayback()
+        mode = .ar
+        
         let segment = segments[currentSegmentIndex]
-        let fileName = mode == .ar ? songInfo.arFileName : songInfo.mrFileName
+        let fileName = songInfo.arFileName // 항상 AR부터 시작
         
         guard let url = Bundle.main.url(forResource: fileName.replacingOccurrences(of: ".mp3", with: ""), withExtension: "mp3") else {
             print("오디오 파일을 찾을 수 없습니다: \(fileName)")
@@ -342,22 +403,8 @@ struct KaraokeLyricView: View {
         
         let startTime = CMTime(seconds: segment.startTime, preferredTimescale: 600)
         player.seek(to: startTime) { [self] _ in
-            player.play()
-            startPlaybackTimer(segment: segment)
-        }
-        
-        if currentLineIndex >= 0 && currentLineIndex < lyricLines.count {
-            currentLine = lyricLines[currentLineIndex]
-            nextLineIndex = currentLineIndex + 1
-            if nextLineIndex < lyricLines.count {
-                nextLine = lyricLines[nextLineIndex]
-            }
-            currentCharacterIndex = 0
-            nextCharacterIndex = 0
-            currentCharacterProgress = 0
-            nextCharacterProgress = 0
-            countdown = 0
-            startCountdown()
+            // 카운트다운이 끝나면 재생 시작
+            resetCharacterStates()
         }
     }
         
@@ -370,15 +417,42 @@ struct KaraokeLyricView: View {
             if currentTime >= segment.endTime {
                 player.pause()
                 timer.invalidate()
+                
+                if mode == .ar {
+                    autoProgressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+                        mode = .mr
+                        startMRPlayback(segment: segment)
+                    }
+                }
             }
             
             self.currentTime = currentTime
+        }
+    }
+    
+    func startMRPlayback(segment: LyricSegment) {
+        let fileName = songInfo.mrFileName
+        
+        guard let url = Bundle.main.url(forResource: fileName.replacingOccurrences(of: ".mp3", with: ""), withExtension: "mp3") else {
+            print("MR 파일을 찾을 수 없습니다: \(fileName)")
+            return
+        }
+        
+        let playerItem = AVPlayerItem(url: url)
+        player.replaceCurrentItem(with: playerItem)
+        
+        let startTime = CMTime(seconds: segment.startTime, preferredTimescale: 600)
+        player.seek(to: startTime) { [self] _ in
+            // MR 재생 전에도 카운트다운 시작
+            resetCharacterStatesForMR()
         }
     }
         
     func stopTimer() {
         playbackTimer?.invalidate()
         playbackTimer = nil
+        autoProgressTimer?.invalidate()
+        autoProgressTimer = nil
     }
     
     func stopPlayback() {
@@ -386,23 +460,66 @@ struct KaraokeLyricView: View {
         stopTimer()
     }
 
-    // 하나 둘 셋 넷 카운터
+    // 하나 둘 셋 넷 카운터 (AR용)
     private func startCountdown() {
         countdownTimer?.invalidate()
         
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.37, repeats: true) { timer in
-            countdown! += 1
+            guard let currentCount = countdown else { return }
+            
+            countdown = currentCount + 1
+            
             if countdown! >= 4 {
                 countdown = nil
+                isCountingDown = false
+                timer.invalidate()
+                countdownTimer = nil
+                
+                // 카운트다운이 끝나면 음악 재생 시작
+                guard currentSegmentIndex < segments.count else { return }
+                let segment = segments[currentSegmentIndex]
+                player.play()
+                startPlaybackTimer(segment: segment)
+                
+                // 가사 타이밍 시작
                 currentCharDuration = lyricsWithDuration.first?.1 ?? 0.0
                 startTime = Date()
                 if hasNextLine {
                     nextCharDuration = NextlyricsWithDuration.first?.1 ?? 0.0
                     nextstartTime = Date()
                 }
+            }
+        }
+    }
+    
+    // 하나 둘 셋 넷 카운터 (MR용)
+    private func startCountdownForMR() {
+        countdownTimer?.invalidate()
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.37, repeats: true) { timer in
+            guard let currentCount = countdown else { return }
+            
+            countdown = currentCount + 1
+            
+            if countdown! >= 4 {
+                countdown = nil
+                isCountingDown = false
                 timer.invalidate()
                 countdownTimer = nil
                 
+                // 카운트다운이 끝나면 MR 재생 시작
+                guard currentSegmentIndex < segments.count else { return }
+                let segment = segments[currentSegmentIndex]
+                player.play()
+                startPlaybackTimer(segment: segment)
+                
+                // 가사 타이밍 시작
+                currentCharDuration = lyricsWithDuration.first?.1 ?? 0.0
+                startTime = Date()
+                if hasNextLine {
+                    nextCharDuration = NextlyricsWithDuration.first?.1 ?? 0.0
+                    nextstartTime = Date()
+                }
             }
         }
     }
@@ -413,11 +530,17 @@ struct LyricLine {
     let text: String
     let timings: [Double]
     
-    /// 각 글자별 지속 시간을 계산해 반환
     var characterDurations: [(String, Double)] {
         let chars = Array(text).map { String($0) }
+        guard timings.count > 1 else { return [] }
+        
         let durations = zip(timings, timings.dropFirst()).map { $1 - $0 }
-        return Array(zip(chars, durations))
+        let result = Array(zip(chars, durations))
+        
+        // 문자 수와 duration 수가 맞지 않으면 빈 배열 반환
+        guard result.count <= chars.count else { return [] }
+        
+        return result
     }
 }
 
