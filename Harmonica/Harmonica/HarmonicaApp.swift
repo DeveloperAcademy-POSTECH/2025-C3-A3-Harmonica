@@ -1,5 +1,5 @@
-// HarmonicaApp.swift
 import SwiftUI
+import SwiftData
 
 @main
 struct HarmonicaApp: App {
@@ -12,5 +12,6 @@ struct HarmonicaApp: App {
 //            SongSearchView()
 //            SearchResultView()
         }
+        .modelContainer(for: SongInfo.self)
     }
 }
