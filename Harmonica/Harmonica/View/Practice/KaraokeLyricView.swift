@@ -58,9 +58,18 @@ struct KaraokeLyricView: View {
         let nextcurrentChar = nextCharacterIndex < NextlyricsWithDuration.count ? NextlyricsWithDuration[nextCharacterIndex].0 : ""
 
         VStack {
+            Button(action: {
+                // 연습 종료 더미 버튼 - 기능 추가 필요
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+            }
+            .padding()
+            
             Text(mode == .ar ? "선창 (원곡)" : "후창 (반주)")
                 .font(.headline)
-                .foregroundColor(mode == .ar ? .red : .blue)  // 선창은 빨간색, 후창은 파란색
+                .foregroundColor(mode == .ar ? .red : .blue)
                 .padding(.horizontal)
             
             Text(songInfo.title)
@@ -69,6 +78,18 @@ struct KaraokeLyricView: View {
             
             Text(songInfo.artist)
                 .font(.subheadline)
+            
+            HStack(spacing: 20) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(getMetronomeCircleColor(for: index))
+                        .frame(width: 30, height: 30)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.gray, lineWidth: 2)
+                        )
+                }
+            }
             
             if let count = countdown {
                 Text(["4", "3", "2", "1"][count])
@@ -210,6 +231,14 @@ struct KaraokeLyricView: View {
         } catch {
             print("오디오 세션 설정 실패: \(error)")
         }
+    }
+    
+    func getMetronomeCircleColor(for index: Int) -> Color {
+        // 더미 로직 - 수정 필요
+        if let count = countdown {
+            return index < count ? .blue : .clear
+        }
+        return .clear
     }
     
     func loadLyrics() {
