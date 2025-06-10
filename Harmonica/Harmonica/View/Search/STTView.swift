@@ -1,4 +1,5 @@
 import SwiftUI
+import Lottie
 
 struct STTView {
   @State private var speechRecognizer = SpeechRecognizer()
@@ -22,6 +23,11 @@ struct STTView {
   
   @State private var errorMessage: String?
   @State private var isShowErrorAlert = false
+  
+  let itemList = ["가수와 제목을 말해주세요", "지금 듣고 있어요"]
+  
+  @State private var currentIndex = 0
+  let timer = Timer.publish(every: 2.0, on: .main, in: .common).autoconnect()
 }
 
 extension STTView {
@@ -103,25 +109,51 @@ extension STTView {
 
 extension STTView: View {
   var body: some View {
-    VStack {
-      Text("Speech To Text")
-        .font(.title)
-        .padding()
-        .foregroundStyle(speechRecognizer.isRecording ? .black : .gray.opacity(0.3))
+    ZStack {
       
-      TextField("", text: $speechRecognizer.transcript)
-        .padding()
-        .frame(height: 50)
-        .border(.black, width: 1)
-        .padding()
+      LottieView2(animationName: "SongTitleSearchView")
       
-      Divider()
-      
-      if isLoading {
-        ProgressView("노래를 찾는 중입니다...")
-          .padding()
+      VStack {
+        HStack {
+          
+          Button(action: {
+            // 백버튼
+          }) {
+            Image(systemName: "arrow.left.circle.fill")
+              .resizable()
+              .frame(width: 80, height: 80)
+              .fontWeight(.semibold)
+              .foregroundStyle(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
+          }
+          
+          Spacer()
+          
+          CustomTextFieldComponent(text: $speechRecognizer.transcript)
+            .padding(.leading, -80)
+          
+          Spacer()
+        }
+        .padding(.top, 56)
+        .padding(.horizontal, 56)
+        
+        
+        Spacer()
+        
+        Text(itemList[currentIndex])
+          .font(.system(size: 64, weight: .semibold))
+          .frame(width: 657, alignment: .center)
+          .onReceive(timer) { _ in
+            if !isShowSearchResult {
+              withAnimation {
+                currentIndex = (currentIndex + 1) % itemList.count
+              }
+            }
+          }
+          .padding(.bottom, 80)
       }
+      
     }
+    .toolbarVisibility(.hidden, for: .navigationBar)
     .navigationDestination(isPresented: $navigateToDetail) {
       if let id = selectedSongID {
         NavigationTestView(id: id)
@@ -140,139 +172,131 @@ extension STTView: View {
     .onDisappear {
       resetRecognizer()
     }
-    .sheet(
-      isPresented: $isShowSearchResult,
-      onDismiss: {
-        resetRecognizer()
-        musicManager.stopPreview()
-        
-        if selectedSongID != nil {
-          navigateToDetail = true
-        } else {
-          startSTT()
+    .customSheet(isPresented: $isShowSearchResult,onDismiss: {
+      resetRecognizer()
+      musicManager.stopPreview()
+      
+      if selectedSongID != nil {
+        navigateToDetail = true
+      } else {
+        startSTT()
+      }
+    }) {
+      SongSearchResultView(
+        item: item,
+        closeAction: {  self.isShowSearchResult = false },
+        selectAction: {
+          selectedSongID = $0
+          self.isShowSearchResult = false
+        },
+        playAction: { musicManager.playPreview(for: $0)},
+        resetActoin: { self.isShowSearchResult = false  })
+    }
+    .onChange(of: speechRecognizer.errorMessage) { _, new in
+      guard new != nil else { return }
+      isShowRecognizerAlert = true
+    }
+    .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
+      Button(action: {
+        isShowPermissionAlert = false
+        permissionMessage = ""
+      }) {
+        Text("취소")
+      }
+      
+      Button(action: {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+          UIApplication.shared.open(url)
         }
       }) {
-        if let item = item {
-          VStack(spacing: 10) {
-            if let artworkURL = item.artworkURL {
-              AsyncImage(url: artworkURL) { image in
-                image
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-              } placeholder: {
-                ProgressView()
+        Text("설정으로 이동")
+      }
+      
+    } message: {
+      Text(permissionMessage)
+    }
+    .alert("애플 뮤직 권한 요청", isPresented: $isShowMusicKitAlert) {
+      Button(action: {
+        isShowMusicKitAlert = false
+        musicPermisionMessage = ""
+      }) {
+        Text("취소")
+      }
+      
+      Button(action: {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+          UIApplication.shared.open(url)
+        }
+      }) {
+        Text("설정으로 이동")
+      }
+      
+    } message: {
+      Text(musicPermisionMessage)
+    }
+    .alert("음성 인식 오류", isPresented: $isShowRecognizerAlert) {
+      Button(action: {
+        speechRecognizer.errorMessage = nil
+        isShowRecognizerAlert = false
+      }) {
+        Text("확인")
+      }
+    } message: {
+      Text(speechRecognizer.errorMessage ?? "")
+    }
+    .alert("오류 발생", isPresented: $isShowErrorAlert, actions: {
+      Button(role: .cancel, action: { errorMessage = nil }) {
+        Text("확인")
+      }
+    }, message: {
+      Text(errorMessage ?? "알 수 없는 오류")
+    })
+  }
+}
+
+
+extension STTView {
+  struct CustomTextFieldComponent {
+    @State private var textWidth: CGFloat = 300
+    @Binding var text: String
+  }
+}
+
+extension STTView.CustomTextFieldComponent: View {
+  var body: some View {
+    VStack {
+      TextField("", text: $text)
+        .font(.system(size: 48))
+        .foregroundStyle(Color(uiColor: UIColor(red: 0.6, green: 0.81, blue: 0.81, alpha: 1)))
+        .padding(.horizontal, 67)
+        .padding(.vertical, 4)
+        .frame(width: textWidth, height: 80)
+        .background(
+          RoundedRectangle(cornerRadius: 42)
+            .fill(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
+        )
+        .overlay(alignment: .leading) {
+          Text(text)
+            .font(.system(size: 48))
+            .padding(.horizontal, 67)
+            .padding(.vertical, 4)
+            .fixedSize()
+            .opacity(0)
+            .background {
+              GeometryReader {
+                let size = $0.size
+                
+                Color.clear
+                  .onChange(of: text) {
+                    let calculatedWidth = max(300, min(900, size.width))
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                      textWidth = calculatedWidth
+                    }
+                  }
               }
-              .frame(width: 270, height: 270)
-              .clipShape(.rect(cornerRadius: 30))
             }
-            
-            Text(item.title)
-              .font(.headline)
-            
-            Text(item.artist)
-              .font(.subheadline)
-              .foregroundStyle(.gray)
-            
-            HStack {
-              
-              Button(action:{
-                isShowSearchResult = false
-              }) {
-                Text("다시 노래 찾기")
-              }
-              
-              Button(action: {
-                selectedSongID = item.id
-                isShowSearchResult = false
-              }) {
-                Text("연습하러 가기")
-              }
-            }
-          }
-          .onAppear {
-            if let url = item.previewURL {
-              musicManager.playPreview(for: url)
-            }
-          }
-        } else {
-          VStack {
-            Text("요청하신 노래를 찾지 못했습니다. \n다시 검색해주세요.")
-            HStack {
-              
-              Button(action:{
-                isShowSearchResult = false
-              }) {
-                Text("처음으로 가기")
-              }
-              
-              Button(action: {
-                isShowSearchResult = false
-              }) {
-                Text("다시 노래 찾기")
-              }
-            }
-          }
         }
-      }
-      .onChange(of: speechRecognizer.errorMessage) { _, new in
-        guard new != nil else { return }
-        isShowRecognizerAlert = true
-      }
-      .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
-        Button(action: {
-          isShowPermissionAlert = false
-          permissionMessage = ""
-        }) {
-          Text("취소")
-        }
-        
-        Button(action: {
-          if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-          }
-        }) {
-          Text("설정으로 이동")
-        }
-        
-      } message: {
-        Text(permissionMessage)
-      }
-      .alert("애플 뮤직 권한 요청", isPresented: $isShowMusicKitAlert) {
-        Button(action: {
-          isShowMusicKitAlert = false
-          musicPermisionMessage = ""
-        }) {
-          Text("취소")
-        }
-        
-        Button(action: {
-          if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-          }
-        }) {
-          Text("설정으로 이동")
-        }
-        
-      } message: {
-        Text(musicPermisionMessage)
-      }
-      .alert("음성 인식 오류", isPresented: $isShowRecognizerAlert) {
-        Button(action: {
-          speechRecognizer.errorMessage = nil
-          isShowRecognizerAlert = false
-        }) {
-          Text("확인")
-        }
-      } message: {
-        Text(speechRecognizer.errorMessage ?? "")
-      }
-      .alert("오류 발생", isPresented: $isShowErrorAlert, actions: {
-          Button(role: .cancel, action: { errorMessage = nil }) {
-            Text("확인")
-          }
-        }, message: {
-          Text(errorMessage ?? "알 수 없는 오류")
-      })
+    }
   }
 }
 
@@ -285,3 +309,24 @@ struct NavigationTestView: View {
     }
   }
 }
+
+struct LottieView2: UIViewRepresentable {
+    let animationName: String
+    var loopMode: LottieLoopMode = .loop
+
+    func makeUIView(context: Context) -> LottieAnimationView {
+        let view = LottieAnimationView(name: animationName)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.loopMode = loopMode
+        view.play()
+        return view
+    }
+
+    func updateUIView(_ uiView: LottieAnimationView, context: Context) {}
+}
+
+
+#Preview {
+  STTView()
+}
+
