@@ -1,68 +1,234 @@
 import SwiftUI
+import ShazamKit
+import AVFoundation
+import MusicKit
 
+/*
+// 검색결과 페이지에 넘겨주는 데이터모델(샤잠킷 > 뮤직킷)
+struct Item: Identifiable, Equatable, Hashable {
+    let id: String
+    let title: String
+    let artist: String
+    let previewURL: URL?
+    let artworkURL: URL?
+    
+    init(
+        id: String,
+        title: String,
+        artist: String,
+        previewURL: URL? = nil,
+        artworkURL: URL? = nil)
+    {
+        self.id = id
+        self.title = title
+        self.artist = artist
+        self.previewURL = previewURL
+        self.artworkURL = artworkURL
+    }
+}
+ */
+
+// 곡 정보 데이터모델
+struct SongInfo: Hashable {
+    let s_title: String
+    let s_artist: String
+    let s_artworkURL: URL?
+    let s_previewURL: URL?
+}
+
+// 곡 인식 관리 클래스
+class ShazamRecognizer: NSObject, ObservableObject {
+    private let audioEngine = AVAudioEngine()
+    private let session = SHSession()
+    private let matchDelegate = MatchDelegate()
+    
+    @Published var matchedSong: SHMediaItem?
+    @Published var didNotFindSong: Bool = false // 실패 여부 상태 추가
+    
+    override init() {
+        super.init()
+        session.delegate = matchDelegate
+        
+        // 노래 매칭시 결과처리
+        matchDelegate.onMatch = {
+            [weak self] mediaItem in DispatchQueue.main.async {
+                self?.matchedSong = mediaItem
+                self?.stopListening() // 매칭완료시 자동종료
+            }
+        }
+        // 만약 매칭되는 결과가 없을 경우 처리방법
+        matchDelegate.onNoMatch = { [weak self] in
+            DispatchQueue.main.async {
+                self?.matchedSong = nil
+                self?.didNotFindSong = true // 실패 상태 표시
+                self?.stopListening()
+            }
+        }
+    }
+    
+    // 노래 들을 때 함수
+    func startListening() throws {
+#if targetEnvironment(simulator)
+        print("⚠️ 시뮬레이터에서는 마이크 인식이 비활성화됩니다.")
+        return
+#else
+        let inputNode = audioEngine.inputNode
+        let format = inputNode.outputFormat(forBus: 0)
+        
+        session.delegate = matchDelegate
+        
+        inputNode.removeTap(onBus: 0) // 혹시 이전 tap이 남아있을 경우 대비
+        
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, time in
+            self.session.matchStreamingBuffer(buffer, at: time)
+        }
+        
+        audioEngine.prepare()
+        try audioEngine.start()
+#endif
+    }
+    // 노래 듣기 마치는 함수
+    func stopListening() {
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+    }
+}
+
+// SHSession 결과처리 델리게이트
+class MatchDelegate: NSObject, SHSessionDelegate {
+    var onMatch: ((SHMediaItem) -> Void)?
+    var onNoMatch: (() -> Void)? // 실패 콜백 추가
+    
+    func session(_ session: SHSession, didFind match: SHMatch) {
+        guard let mediaItem = match.mediaItems.first else { return }
+        onMatch?(mediaItem)
+    }
+    func session(_ session: SHSession, didNotFindMatchFor signature: SHSignature) {
+        // ❗ 곡을 찾지 못했을 때 실행됨
+        onNoMatch?()
+    }
+}
+
+// 네비게이션 타겟
+enum NavigationTarget: Hashable {
+    case result(SongInfo?)
+}
+
+// 음악인식 검색 뷰
 struct SongSearchView: View {
     @Environment(\.presentationMode) var presentationMode
+    @StateObject private var recognizer = ShazamRecognizer()
+    @State private var promptText = "노래를 들려주세요"
+    @State private var permissionChecked = false
+    @Binding var path: NavigationPath
+    
+    //    @State private var isShowPermissionAlert = false
+    //    @State private var isShowRecognizerAlert = false
+    //    @State private var isMatchFound = false
+    
+    // 마이크 권한 요청
+    private func requestMicPermission() async -> MicPermissionStatus {
+        let permission = AVAudioApplication.shared.recordPermission
+        switch permission {
+        case .granted:
+            return .granted
+        case .denied:
+            return .denied
+        case .undetermined:
+            return await withCheckedContinuation { continuation in
+                AVAudioApplication.requestRecordPermission { granted in
+                    continuation.resume(returning: granted ? .granted : .denied)
+                }
+            }
+        @unknown default:
+            return .undetermined
+        }
+    }
+    
+    // 마이크 사용권한 확인 & 샤잠 자동실행
+    private func startRecognitionFlow() async {
+        let permission = await requestMicPermission()
+        if permission == .granted {
+            promptText = "노래를 들려주세요. 듣고 있어요"
+            recognizer.didNotFindSong = false
+            recognizer.matchedSong = nil
+            try? recognizer.startListening()
+        } else {
+            promptText = "⚠️ 마이크 권한이 필요합니다"
+        }
+    }
+    
+    // 검색 재시작 전 초기화 포함
+    private func restartListening() async {
+        recognizer.stopListening()
+        await startRecognitionFlow()
+    }
     
     var body: some View {
-        VStack() {
+        VStack {
             HStack {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    // [이전(돌아가기) 버튼]
-                    ZStack {
-                        Rectangle()
-                            .foregroundColor(.clear)
-                            .frame(width: 150, height: 110)
-                            .background(Color(red: 0.34, green: 0.34, blue: 0.34))
-                            .cornerRadius(20)
-                        Image("Ellipse 11")
-                            .frame(width: 120, height: 82)
-                            .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                        Text("이전")
-                            .font(
-                                Font.custom("SF Pro", size: 48)
-                                    .weight(.medium)
-                            )
-                            .foregroundColor(Color(red: 0.92, green: 0.91, blue: 0.87))
+                Button("이전") {
+                    path = NavigationPath() // 메인 뷰로 복귀
+                }
+                Spacer()
+                
+                Button("검색") {
+                    Task {
+                        await startRecognitionFlow()
                     }
                 }
-                .padding()
-                Spacer()
             }
             Spacer()
             
-            // [waveform 애니메이션 이미지 삽입]
-            ZStack{
-                Rectangle()
-                    .foregroundColor(.clear)
-                    .frame(width: 260, height: 260)
-                    .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                    .cornerRadius(260)
-                    .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 0)
-                Rectangle()
-                    .foregroundColor(.clear)
-                    .frame(width: 238, height: 238)
-                    .background(Color(red: 0.92, green: 0.9, blue: 0.88))
-                    .cornerRadius(260)
-                    .shadow(color: .black.opacity(0.25), radius: 10, x: 0, y: 0)
-                Image(systemName: "waveform")
-                    .resizable()
-                    .frame(width: 238, height: 238)
-                    .symbolEffect(.breathe)
-            }
+            // 💛 To-do : [로띠 애니메이션으로 대체될 부분]
+            Image(systemName: "waveform")
+                .resizable()
+                .frame(width: 200, height: 200)
+                .symbolEffect(.breathe)
+            
             Spacer()
             
-            // (아직 미적용)모니카의 요청: 텍스트를 한줄로 - 검색시작 1초 이후 "지금 들려주세요 듣고있어요"
-            Text("노래를 들려주세요 ")
-                .font(
-                    Font.custom("SF Pro", size: 64)
-                        .weight(.medium)
-                )
+            Text(promptText)
+                .font(.title)
                 .multilineTextAlignment(.center)
                 .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-            Spacer()
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.5), value: promptText)
         }
-        .navigationBarBackButtonHidden(true) // 기본 뒤로가기 버튼 숨김
+        // 화면 진입시 마이크 사용권한 확인 & 샤잠 자동실행
+        .onAppear {
+            Task {
+                if !permissionChecked {
+                    permissionChecked = true
+                    await startRecognitionFlow()
+                } else {
+                    await restartListening() // 다시 돌아왔을 때도 자동 시작
+                }
+            }
+        }
+        // 곡 검색에 성공시 matchedSong을 감지하여 상태변경
+        .onReceive(recognizer.$matchedSong) { item in
+            if let item = item {
+                let info = SongInfo(
+                    s_title: item.title ?? "제목 없음",
+                    s_artist: item.artist ?? "아티스트 없음",
+                    s_artworkURL: item.artworkURL,
+                    s_previewURL: item.appleMusicURL
+                )
+                path.append(NavigationTarget.result(info))
+            }
+        }
+        // 매치하는 곡 검색에 실패시
+        .onReceive(recognizer.$didNotFindSong) { notFound in
+            if notFound {
+                path.append(NavigationTarget.result(nil))
+            }
+        }
+        Spacer()
     }
+}
+
+// 샤잠킷에서 뮤직킷(애플 뮤직 라이브러리) 데이터를 받아오는 함수
+func getAppleMusicData() -> [String] {
+    
 }

@@ -16,9 +16,22 @@
 		9434108C2DE6EF390002634E /* Harmonica.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Harmonica.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		940C72F92DEECF9E00948154 /* Exceptions for "Harmonica" folder in "Harmonica" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9434108B2DE6EF390002634E /* Harmonica */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9434108E2DE6EF390002634E /* Harmonica */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				940C72F92DEECF9E00948154 /* Exceptions for "Harmonica" folder in "Harmonica" target */,
+			);
 			path = Harmonica;
 			sourceTree = "<group>";
 		};
@@ -31,7 +44,8 @@
 			files = (
 				32C496B32DF4ABD100E4E2AC /* Glur in Frameworks */,
 				EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */,
-				329BC1022DF57EF900D913E7 /* Lottie in Frameworks */,
+				94D86B102DF8376D002F8FD0 /* Lottie in Frameworks */,
+				94D86B132DF83787002F8FD0 /* Glur in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,6 +285,8 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 8ZUB5C2R66;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
@@ -313,6 +329,8 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 8ZUB5C2R66;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
