@@ -6,7 +6,8 @@ struct MainView: View {
     @State private var isShazamPressed: Bool = false
     @State private var path = NavigationPath()
     var body: some View {
-        NavigationStack(path: $path){
+//        NavigationStack(path: $path){
+        NavigationStack{
             HStack(spacing: 24) {
                 SongBox(SongName: "나그네 고향", AlbumCover: Image("나그네고향"))
                 SongBox(SongName: "내 여자 내 남자", AlbumCover: Image("내 여자 내 남자 앨범 커버"))
@@ -25,7 +26,7 @@ struct MainView: View {
                         }
                         .onEnded { _ in
                             isShazamPressed = false
-                            path.append("shazam")
+//                            path.append("shazam")
                         }
                 )
                 .padding(.trailing, 14)
@@ -42,18 +43,18 @@ struct MainView: View {
                         }
                         .onEnded{ _ in
                             isSTTPressed = false
-                            path.append("STT")
+//                            path.append("STT")
                         }
                 )
             }
-            .navigationDestination(for: String.self) { value in
-                if value == "shazam" {
-                    SongSearchView()
-                }
-                else if value == "STT" {
-                    STTView()
-                }
-            }
+//            .navigationDestination(for: String.self) { value in
+//                if value == "shazam" {
+//                    SongSearchView()
+//                }
+//                else if value == "STT" {
+//                    STTView()
+//                }
+//            }
         }
     }
 }
