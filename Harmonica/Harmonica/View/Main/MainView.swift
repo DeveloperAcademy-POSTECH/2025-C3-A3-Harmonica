@@ -1,8 +1,11 @@
 import SwiftUI
 
 struct MainView: View {
+    
+    @State private var path = NavigationPath()
+    
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             HStack {
                 // 화면 좌측 [불렀던 곡(히스토리)] 세로 스크롤뷰
                 HistoryView()
@@ -13,7 +16,7 @@ struct MainView: View {
                         .foregroundColor(Color(red: 0.49, green: 0, blue: 0))
                     Spacer()
                     // [음악인식 검색뷰(듀이) 이동버튼]
-                    NavigationLink(destination: SongSearchView()) {
+                    NavigationLink(destination: SongSearchView(path: $path)) {
                         ZStack{
                             Rectangle()
                                 .foregroundColor(.clear)
@@ -82,6 +85,13 @@ struct MainView: View {
             }
             .navigationViewStyle(StackNavigationViewStyle())
             .padding()
+            
+            .navigationDestination(for: NavigationTarget.self) { target in
+                switch target {
+                case .result(let songInfo):
+                    SearchResultView(songInfo: songInfo, path: $path)
+                }
+            }
         }
     }
 }
