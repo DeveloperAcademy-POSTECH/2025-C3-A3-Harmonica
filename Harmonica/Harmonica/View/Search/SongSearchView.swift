@@ -29,7 +29,7 @@ struct Item: Identifiable, Equatable, Hashable {
  */
 
 // 곡 정보 데이터모델
-struct SongInfo: Hashable {
+struct ShazamSongInformation: Hashable {
     let s_title: String
     let s_artist: String
     let s_artworkURL: URL?
@@ -111,7 +111,7 @@ class MatchDelegate: NSObject, SHSessionDelegate {
 
 // 네비게이션 타겟
 enum NavigationTarget: Hashable {
-    case result(SongInfo?)
+    case result(ShazamSongInformation?)
 }
 
 // 음악인식 검색 뷰
@@ -209,7 +209,7 @@ struct SongSearchView: View {
         // 곡 검색에 성공시 matchedSong을 감지하여 상태변경
         .onReceive(recognizer.$matchedSong) { item in
             if let item = item {
-                let info = SongInfo(
+                let info = ShazamSongInformation(
                     s_title: item.title ?? "제목 없음",
                     s_artist: item.artist ?? "아티스트 없음",
                     s_artworkURL: item.artworkURL,
@@ -229,6 +229,6 @@ struct SongSearchView: View {
 }
 
 // 샤잠킷에서 뮤직킷(애플 뮤직 라이브러리) 데이터를 받아오는 함수
-func getAppleMusicData() -> [String] {
-    
-}
+//func getAppleMusicData() -> [String] {
+//    
+//}
