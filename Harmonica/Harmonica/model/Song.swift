@@ -3,17 +3,17 @@ import SwiftData
 
 @Model
 class SongInfo {
-    @Attribute(.unique) var id: Int // 중복되면 안 되는 값
+    @Attribute(.unique) var id: Int
     var title: String
     var artist: String
     var arFileName: String
     var mrFileName: String
     var lyricsFileName: String
     var bpm: Int
-//    var startTime: Double
-//    @Relationship(deleteRule: .cascade) var segments: [Segment] = [] // 부모(SongInfo)가 삭제되면 연결된 자식(Segment)도 삭제, Segment와 1:N 관계
+    var timeSignatureTop: Int
+    var timeSignatureBottom: Int
 
-    init(id: Int, title: String, artist: String, arFileName: String, mrFileName: String, lyricsFileName: String, bpm: Int) {
+    init(id: Int, title: String, artist: String, arFileName: String, mrFileName: String, lyricsFileName: String, bpm: Int, timeSignatureTop: Int, timeSignatureBottom: Int) {
         self.id = id
         self.title = title
         self.artist = artist
@@ -21,12 +21,22 @@ class SongInfo {
         self.mrFileName = mrFileName
         self.lyricsFileName = lyricsFileName
         self.bpm = bpm
+        self.timeSignatureTop = timeSignatureTop
+        self.timeSignatureBottom = timeSignatureBottom
     }
 }
 
+// MARK: - Preview 및 기본 데이터
 extension SongInfo {
     static var preview: SongInfo {
-        // 실제 id: 1641943955, 1759969510
-        SongInfo(id: 1, title: "내 여자 내 남자", artist: "배금성", arFileName: "1_ar.mp3", mrFileName: "1_mr.mp3", lyricsFileName: "1_lyrics", bpm: 100)
+        SongInfo(id: 1, title: "내 여자 내 남자", artist: "배금성", arFileName: "1_ar.mp3", mrFileName: "1_mr.mp3", lyricsFileName: "1_lyrics", bpm: 143, timeSignatureTop: 4, timeSignatureBottom: 4)
+    }
+    
+    // 기본 곡 정보들
+    static var defaultSongs: [SongInfo] {
+        return [
+            SongInfo(id: 1641943955, title: "내 여자 내 남자", artist: "배금성", arFileName: "1_ar.mp3", mrFileName: "1_mr.mp3", lyricsFileName: "1_lyrics", bpm: 143, timeSignatureTop: 4, timeSignatureBottom: 4),
+            SongInfo(id: 1759969510, title: "내 여자 내 남자", artist: "배금성", arFileName: "1_ar.mp3", mrFileName: "1_mr.mp3", lyricsFileName: "1_lyrics", bpm: 143, timeSignatureTop: 4, timeSignatureBottom: 4)
+        ]
     }
 }
