@@ -31,7 +31,7 @@ struct KaraokeLyricView: View {
     @State private var currentSegmentIndex = 0
     @State private var segments: [LyricSegment] = []
     @State private var lyricLines: [LyricLine] = []
-    @State private var isPlaying = false // 재생 상태 추가
+    @State private var isPlaying = false
     
     // 메트로놈 관련 State
     @State private var metronomeStartTime: Date?
@@ -257,8 +257,6 @@ struct KaraokeLyricView: View {
     
     // MARK: - Functions
     func setupAudio() {
-        // 음악을 재생 중임을 iOS에게 알려주기
-        // 다른 앱 소리 중단
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
@@ -426,7 +424,6 @@ struct KaraokeLyricView: View {
     }
     
     func previous() {
-        print("=== PREVIOUS")
         guard currentSegmentIndex > 0 else { return }
         
         stopPlayback()
@@ -453,7 +450,6 @@ struct KaraokeLyricView: View {
     }
     
     func next() {
-        print("=== NEXT")
         guard currentSegmentIndex < segments.count - 1 else { return }
         
         stopPlayback()
