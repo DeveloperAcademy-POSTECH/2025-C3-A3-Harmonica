@@ -99,7 +99,7 @@ struct KaraokeLyricView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Image(mode == .ar ? "WhoChang" : "SeonChang")
+                    Image(mode == .ar ? "SeonChang": "WhoChang")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 121, height: 67)
@@ -112,23 +112,19 @@ struct KaraokeLyricView: View {
             if isPlaying || countdown != nil {
                 HStack(spacing: 20) {
                     ForEach(0..<beatsPerMeasure, id: \.self) { index in
-                        Circle()
-                            .fill(getMetronomeCircleColor(for: index))
-                            .frame(width: 30, height: 30)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.gray, lineWidth: 2)
-                            )
-                            .overlay(
-                                index == currentBeat && isMetronomeActive ?
-                                Circle()
-                                    .trim(from: 0, to: beatProgress)
-                                    .stroke(Color.blue, lineWidth: 4)
-                                    .rotationEffect(.degrees(-90))
-                                : nil
-                            )
-                            .scaleEffect(index == currentBeat && isMetronomeActive ? 1.1 : 1.0)
-                            .animation(.easeInOut(duration: 0.1), value: currentBeat)
+                        ZStack {
+                            Image("ClapEmpty")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 150, height: 115)
+                            
+                            if getMetronomeImageState(for: index) {
+                                Image("ClapFilled")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 150, height: 115)
+                            }
+                        }
                     }
                 }
                 .transition(.opacity)
@@ -295,6 +291,7 @@ struct KaraokeLyricView: View {
             if !lyricLines.isEmpty {
                 updateCurrentLines()
             }
+            replay()
         }
         .onDisappear {
             stopPlayback()
@@ -412,22 +409,16 @@ struct KaraokeLyricView: View {
         beatProgress = CGFloat(beatElapsed)
     }
     
-    func getMetronomeCircleColor(for index: Int) -> Color {
+    func getMetronomeImageState(for index: Int) -> Bool {
         if let count = countdown {
-            return index < count ? .blue : .clear
+            return index <= count
         }
         
         if isMetronomeActive {
-            if index == currentBeat {
-                return .blue
-            } else if index < currentBeat {
-                return .blue.opacity(0.3)
-            } else {
-                return .clear
-            }
+            return index <= currentBeat
         }
         
-        return .clear
+        return false
     }
     
     func loadLyrics() {
