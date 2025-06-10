@@ -349,7 +349,7 @@ struct KaraokeLyricView: View {
     }
     
     func setupMetronomeSound() {
-        guard let soundURL = Bundle.main.url(forResource: "metronome_click", withExtension: "wav") else {
+        guard let soundURL = Bundle.main.url(forResource: "metronome_click", withExtension: "mp3") else {
             print("No metronome sound file: use system sound")
             return
         }
@@ -357,7 +357,7 @@ struct KaraokeLyricView: View {
         do {
             metronomePlayer = try AVAudioPlayer(contentsOf: soundURL)
             metronomePlayer?.prepareToPlay()
-            metronomePlayer?.volume = 0.5
+            metronomePlayer?.volume = 0.7
         } catch {
             print("FAIL metronome sound setting: \(error)")
         }
