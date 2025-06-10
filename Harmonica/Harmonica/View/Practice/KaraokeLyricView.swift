@@ -41,7 +41,7 @@ struct KaraokeLyricView: View {
     @State private var lastBeatTime: Date = Date()
     @State private var metronomePlayer: AVAudioPlayer?
 
-    //View용 State
+    // View용 State
     @State private var isBackPressed: Bool = false
     @State private var isRetryPressed: Bool = false
     @State private var isNextPressed: Bool = false
@@ -457,7 +457,8 @@ struct KaraokeLyricView: View {
                 endTime: endTime,
                 lyric: lyricData.Lyric,
                 timingArray: lyricData.timingArray,
-                index: lyricData.index
+                index: lyricData.index,
+                sectionType: lyricData.sectionType
             )
             
             segments.append(segment)
@@ -595,9 +596,15 @@ struct KaraokeLyricView: View {
                 timer.invalidate()
                 
                 if mode == .ar {
-                    autoProgressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-                        mode = .mr
-                        startMRPlayback(segment: segment)
+                    if segment.sectionType == "interlude" || segment.sectionType == "intro" {
+                        autoProgressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+                            self.moveToNextSegment()
+                        }
+                    } else {
+                        autoProgressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+                            mode = .mr
+                            startMRPlayback(segment: segment)
+                        }
                     }
                 } else {
                     isPlaying = false
@@ -606,6 +613,31 @@ struct KaraokeLyricView: View {
             }
             
             self.currentTime = currentTime
+        }
+    }
+    
+    func moveToNextSegment() {
+        guard currentSegmentIndex < segments.count - 1 else {
+            isPlaying = false
+            stopMetronome()
+            return
+        }
+        
+        let currentIndex = segments[currentSegmentIndex].index
+        var targetSegmentIndex = currentSegmentIndex + 1
+        
+        while targetSegmentIndex < segments.count && segments[targetSegmentIndex].index == currentIndex {
+            targetSegmentIndex += 1
+        }
+        
+        if targetSegmentIndex < segments.count {
+            currentSegmentIndex = targetSegmentIndex
+            currentLineIndex = findLineIndexBySegmentIndex(targetSegmentIndex)
+            updateCurrentLines()
+            replay()
+        } else {
+            isPlaying = false
+            stopMetronome()
         }
     }
     
@@ -734,6 +766,7 @@ struct LyricSegment {
     let lyric: String
     let timingArray: [Double]
     let index: Int
+    let sectionType: String?
 }
 
 struct LyricData: Codable {
@@ -742,6 +775,7 @@ struct LyricData: Codable {
     let timingArray: [Double]
     let mp3Start: Double
     let duration: Double?
+    let sectionType: String?
 }
 
 enum PlayMode {
