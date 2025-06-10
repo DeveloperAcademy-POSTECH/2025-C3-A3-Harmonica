@@ -31,25 +31,14 @@ struct KaraokeLyricView: View {
     @State private var currentSegmentIndex = 0
     @State private var segments: [LyricSegment] = []
     @State private var lyricLines: [LyricLine] = []
-    @State private var isPlaying = false
     
-    // 메트로놈 관련 State
-    @State private var metronomeStartTime: Date?
-    @State private var currentBeat: Int = 0
-    @State private var beatProgress: CGFloat = 0.0
-    @State private var isMetronomeActive = false
-    @State private var lastBeatTime: Date = Date()
-    @State private var metronomePlayer: AVAudioPlayer?
+    //View용 찌끄레기 State
+    @State private var isBackPressed: Bool = false
+    @State private var isRetryPressed: Bool = false
+    @State private var isNextPressed: Bool = false
     
-    private var beatsPerMeasure: Int {
-        songInfo.timeSignatureTop
-    }
     
-    private var beatDuration: Double {
-        60.0 / Double(songInfo.bpm)
-    }
-
-    let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.016, on: .main, in: .common).autoconnect() // ~60fps
     
     var hasNextLine: Bool {
         guard nextLineIndex < lyricLines.count,
@@ -57,14 +46,14 @@ struct KaraokeLyricView: View {
               currentSegmentIndex < segments.count else { return false }
         return segments[currentSegmentIndex].index == segments[nextLineIndex].index
     }
-
+    
     var lyricsWithDuration: [(String, Double)] {
         currentLine.characterDurations
     }
     var NextlyricsWithDuration: [(String, Double)] {
         nextLine.characterDurations
     }
-
+    
     var body: some View {
         let fullText = lyricsWithDuration.map { $0.0 }.joined()
         let highlightedText = lyricsWithDuration.prefix(currentCharacterIndex).map { $0.0 }.joined()
@@ -73,32 +62,40 @@ struct KaraokeLyricView: View {
         let nextfullText = NextlyricsWithDuration.map { $0.0 }.joined()
         let nexthighlightedtext = NextlyricsWithDuration.prefix(nextCharacterIndex).map { $0.0 }.joined()
         let nextcurrentChar = nextCharacterIndex < NextlyricsWithDuration.count ? NextlyricsWithDuration[nextCharacterIndex].0 : ""
-
-        VStack {
-            Button(action: {
-                // 연습 종료 더미 버튼 - 기능 추가 필요
-            }) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.gray)
+        
+        ZStack{
+            Image("MetronomeField")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 1250, height: 279)
+            VStack {
+                HStack {
+                    
+                    Button(action: {
+                        
+                    }) {
+                        Image("Power")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 76, height: 76)
+                    }
+                    Spacer()
+                }
+                Spacer()
+                HStack {
+                    Spacer()
+                    Image(mode == .ar ? "WhoChang" : "SeonChang")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 121, height: 67)
+                        .padding(.trailing, 5)
+                }
+                .padding(.bottom, 3)
             }
-            .padding()
-            
-            Text(mode == .ar ? "선창 (원곡)" : "후창 (반주)")
-                .font(.headline)
-                .foregroundColor(mode == .ar ? .red : .blue)
-                .padding(.horizontal)
-            
-            Text(songInfo.title)
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text(songInfo.artist)
-                .font(.subheadline)
-            
-            if isPlaying || countdown != nil {
+            .frame(width: 1250, height: 279)
+                
                 HStack(spacing: 20) {
-                    ForEach(0..<beatsPerMeasure, id: \.self) { index in
+                    ForEach(0..<3, id: \.self) { index in
                         Circle()
                             .fill(getMetronomeCircleColor(for: index))
                             .frame(width: 30, height: 30)
@@ -106,101 +103,171 @@ struct KaraokeLyricView: View {
                                 Circle()
                                     .stroke(Color.gray, lineWidth: 2)
                             )
-                            .overlay(
-                                index == currentBeat && isMetronomeActive ?
-                                Circle()
-                                    .trim(from: 0, to: beatProgress)
-                                    .stroke(Color.blue, lineWidth: 4)
-                                    .rotationEffect(.degrees(-90))
-                                : nil
-                            )
-                            .scaleEffect(index == currentBeat && isMetronomeActive ? 1.1 : 1.0)
-                            .animation(.easeInOut(duration: 0.1), value: currentBeat)
                     }
-                }
-                .transition(.opacity)
             }
+        }
+        .padding(.bottom, 0)
+        .padding(.top, 40)
+        
+        //MARK: ----------------------------------------------------------------------------------------------------------
+        
+        
+        ZStack{
+            RoundedRectangle(cornerRadius: 40)
+                .fill(Color(Color(hex: "DDDDDD")))
+                .frame(width: 1250, height: 421)
             
+            //MARK: 여기야
             if let count = countdown {
-                Text(["4", "3", "2", "1"][count])
-                    .font(.largeTitle)
-                    .bold()
-                    .transition(.opacity)
-            }
-
-            ZStack(alignment: .leading) {
-                Text(fullText)
-                    .foregroundColor(.gray)
-                    .bold()
-
-                HStack(spacing: 0) {
-                    Text(highlightedText)
-                        .foregroundColor(.blue)
-                        .bold()
-
-                    //두개로 label을 나눠서 마스크 & 텍스트를 두개로 해버리는게 나을까?
-                    //아니면 mask가 Text 위치를 따라갈 수 있는 방법이 있을까?
-                    if !currentChar.isEmpty {
-                        Text(currentChar)
-                            .foregroundColor(.blue)
-                            .bold()
-                            .mask(
-                                GeometryReader { geo in
-                                    Rectangle()
-                                        .frame(width: geo.size.width * currentCharacterProgress)
+                let circleColors: [Color] = [Color(hex:"00484A"), Color(hex:"007A7D"), Color(hex:"00ADB2"), Color(hex:"04D1D7")]
+                VStack {
+                    HStack(spacing: 20) {
+                        ForEach(0..<4) { index in
+                            if index <= count {
+                                ZStack {
+                                    Circle()
+                                        .fill(circleColors[index])
+                                        .frame(width: 50, height: 50)
+                                    Text(["1", "2", "3", "4"][index])
+                                        .font(.system(size: 40))
+                                        .bold()
+                                        .foregroundColor(.white)
                                 }
-                            )
+                            }
+                        }
+                        Spacer()
                     }
+                    Spacer()
                 }
+                .padding()
+                .padding(.top, 20)
+                .padding(.leading, 120)
             }
-            .font(.title)
-            .padding()
-            
-            if hasNextLine {
+            VStack{
+                
                 ZStack(alignment: .leading) {
-                    Text(nextfullText)
+                    Text(fullText)
                         .foregroundColor(.gray)
                         .bold()
                     
                     HStack(spacing: 0) {
-                        Text(nexthighlightedtext)
-                            .foregroundColor(.blue)
+                        //이미 파란색으로 채워진 텍스트들
+                        Text(highlightedText)
+                            .foregroundColor(Color(hex: "00B6BA"))
                             .bold()
                         
-                        if !nextcurrentChar.isEmpty {
-                            Text(nextcurrentChar)
-                                .foregroundColor(.blue)
+                        //두개로 label을 나눠서 마스크 & 텍스트를 두개로 해버리는게 나을까?
+                        //아니면 mask가 Text 위치를 따라갈 수 있는 방법이 있을까?
+                        if !currentChar.isEmpty {
+                            Text(currentChar)
+                                .foregroundColor(Color(hex: "00B6BA"))
                                 .bold()
                                 .mask(
                                     GeometryReader { geo in
                                         Rectangle()
-                                            .frame(width: geo.size.width * nextCharacterProgress)
+                                            .frame(width: geo.size.width * currentCharacterProgress)
                                     }
                                 )
                         }
                     }
                 }
-                .font(.title)
-                .padding()
-            }
+                .font(.system(size: 96))
+                .padding(.bottom, 0)
+                
+                
+                
+                ZStack{
+                    if hasNextLine {
+                        ZStack(alignment: .leading) {
+                            Text(nextfullText)
+                                .foregroundColor(.gray)
+                                .bold()
+                            
+                            HStack(spacing: 0) {
+                                
+                                //이미 파란색으로 채워진 텍스트들
+                                Text(nexthighlightedtext)
+                                    .foregroundColor(Color(hex: "00B6BA"))
+                                    .bold()
 
-            HStack(spacing: 30){
-                Button(action: previous) {
-                    Image(systemName: "backward.fill")
+                                if !nextcurrentChar.isEmpty {
+                                    Text(nextcurrentChar)
+                                        .foregroundColor(Color(hex: "00B6BA"))
+                                        .bold()
+                                        .mask(
+                                            GeometryReader { geo in
+                                                Rectangle()
+                                                    .frame(width: geo.size.width * nextCharacterProgress)
+                                            }
+                                        )
+                                }
+                            }
+                        }
+                        .font(.system(size: 96))
+                        .padding(.top, 0)
+                    }
                 }
-                .disabled(currentSegmentIndex <= 0)
-                
-                Button(action: replay) {
-                    Image(systemName: "gobackward")
-                }
-                
-                Button(action: next) {
-                    Image(systemName: "forward.fill")
-                }
-                .disabled(currentSegmentIndex >= segments.count - 1)
             }
         }
-
+        .padding(.bottom, 40)
+        .padding(.top, 16)
+            
+        HStack(spacing: 45){
+            Button(action: previous) {
+                Image(isBackPressed ? "BackPressed" : "Back")
+                    .resizable()
+                    .frame(width: 172, height: 172)
+                    .scaledToFit()
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                isBackPressed = true
+                            }
+                            .onEnded { _ in
+                                isBackPressed = false
+                                previous()
+                            }
+                    )
+            }
+            .disabled(currentSegmentIndex <= 0)
+            
+            Button(action: replay) {
+                Image(isRetryPressed ? "Retry_Pressed" : "Retry")
+                    .resizable()
+                    .frame(width: 172, height: 172)
+                    .scaledToFit()
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                isRetryPressed = true
+                            }
+                            .onEnded { _ in
+                                isRetryPressed = false
+                                replay()
+                            }
+                    )
+            }
+            
+            Button(action: next) {
+                Image(isNextPressed ? "Next_Pressed" : "Next")
+                    .resizable()
+                    .frame(width: 172, height: 172)
+                    .scaledToFit()
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                isNextPressed = true
+                            }
+                            .onEnded { _ in
+                                isNextPressed = false
+                                next()
+                            }
+                    )
+            }
+            .disabled(currentSegmentIndex >= segments.count - 1)
+        }
+        .padding(.bottom, 40)
+        
         .onAppear {
             setupAudio()
             setupMetronomeSound()
@@ -218,11 +285,11 @@ struct KaraokeLyricView: View {
         .onReceive(timer) { _ in
             guard countdown == nil else { return }
             guard currentCharacterIndex < lyricsWithDuration.count else { return }
-
+            
             let elapsed = Date().timeIntervalSince(startTime)
             let duration = lyricsWithDuration[currentCharacterIndex].1
             currentCharacterProgress = min(1.0, elapsed / duration)
-
+            
             if currentCharacterProgress >= 1.0 {
                 currentCharacterIndex += 1
                 currentCharacterProgress = 0.0
@@ -236,11 +303,11 @@ struct KaraokeLyricView: View {
             guard countdown == nil else { return }
             guard hasNextLine else { return }
             guard nextCharacterIndex < NextlyricsWithDuration.count else { return }
-
+            
             let elapsed = Date().timeIntervalSince(nextstartTime)
             let duration = NextlyricsWithDuration[nextCharacterIndex].1
             nextCharacterProgress = min(1.0, elapsed / duration)
-
+            
             if nextCharacterProgress >= 1.0 {
                 nextCharacterIndex += 1
                 nextCharacterProgress = 0.0
@@ -506,7 +573,7 @@ struct KaraokeLyricView: View {
             resetCharacterStates()
         }
     }
-        
+    
     func startPlaybackTimer(segment: LyricSegment) {
         stopTimer()
         isPlaying = true
@@ -549,7 +616,7 @@ struct KaraokeLyricView: View {
             resetCharacterStatesForMR()
         }
     }
-        
+    
     func stopTimer() {
         playbackTimer?.invalidate()
         playbackTimer = nil
@@ -563,7 +630,7 @@ struct KaraokeLyricView: View {
         stopTimer()
         stopMetronome()
     }
-
+    
     // 하나 둘 셋 넷 카운터 (AR용)
     private func startCountdown() {
         countdownTimer?.invalidate()
