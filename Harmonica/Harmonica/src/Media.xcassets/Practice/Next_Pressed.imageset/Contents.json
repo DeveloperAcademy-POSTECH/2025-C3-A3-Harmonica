@@ -1,17 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "나그네고향.svg",
+      "filename" : "Next_Pressed.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "나그네고향 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "나그네고향 2.svg",
       "idiom" : "universal",
       "scale" : "3x"
     }
