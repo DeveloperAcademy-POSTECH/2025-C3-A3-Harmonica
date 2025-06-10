@@ -31,14 +31,30 @@ struct KaraokeLyricView: View {
     @State private var currentSegmentIndex = 0
     @State private var segments: [LyricSegment] = []
     @State private var lyricLines: [LyricLine] = []
+    @State private var isPlaying = false
     
-    //View용 찌끄레기 State
+    // 메트로놈 관련 State
+    @State private var metronomeStartTime: Date?
+    @State private var currentBeat: Int = 0
+    @State private var beatProgress: CGFloat = 0.0
+    @State private var isMetronomeActive = false
+    @State private var lastBeatTime: Date = Date()
+    @State private var metronomePlayer: AVAudioPlayer?
+
+    //View용 State
     @State private var isBackPressed: Bool = false
     @State private var isRetryPressed: Bool = false
     @State private var isNextPressed: Bool = false
     
-    
-    let timer = Timer.publish(every: 0.016, on: .main, in: .common).autoconnect() // ~60fps
+    private var beatsPerMeasure: Int {
+        songInfo.timeSignatureTop
+    }
+
+    private var beatDuration: Double {
+        60.0 / Double(songInfo.bpm)
+    }
+
+    let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     
     var hasNextLine: Bool {
         guard nextLineIndex < lyricLines.count,
@@ -70,7 +86,6 @@ struct KaraokeLyricView: View {
                 .frame(width: 1250, height: 279)
             VStack {
                 HStack {
-                    
                     Button(action: {
                         
                     }) {
@@ -94,8 +109,9 @@ struct KaraokeLyricView: View {
             }
             .frame(width: 1250, height: 279)
                 
+            if isPlaying || countdown != nil {
                 HStack(spacing: 20) {
-                    ForEach(0..<3, id: \.self) { index in
+                    ForEach(0..<beatsPerMeasure, id: \.self) { index in
                         Circle()
                             .fill(getMetronomeCircleColor(for: index))
                             .frame(width: 30, height: 30)
@@ -103,21 +119,29 @@ struct KaraokeLyricView: View {
                                 Circle()
                                     .stroke(Color.gray, lineWidth: 2)
                             )
+                            .overlay(
+                                index == currentBeat && isMetronomeActive ?
+                                Circle()
+                                    .trim(from: 0, to: beatProgress)
+                                    .stroke(Color.blue, lineWidth: 4)
+                                    .rotationEffect(.degrees(-90))
+                                : nil
+                            )
+                            .scaleEffect(index == currentBeat && isMetronomeActive ? 1.1 : 1.0)
+                            .animation(.easeInOut(duration: 0.1), value: currentBeat)
                     }
+                }
+                .transition(.opacity)
             }
         }
         .padding(.bottom, 0)
         .padding(.top, 40)
-        
-        //MARK: ----------------------------------------------------------------------------------------------------------
-        
         
         ZStack{
             RoundedRectangle(cornerRadius: 40)
                 .fill(Color(Color(hex: "DDDDDD")))
                 .frame(width: 1250, height: 421)
             
-            //MARK: 여기야
             if let count = countdown {
                 let circleColors: [Color] = [Color(hex:"00484A"), Color(hex:"007A7D"), Color(hex:"00ADB2"), Color(hex:"04D1D7")]
                 VStack {
@@ -143,15 +167,14 @@ struct KaraokeLyricView: View {
                 .padding(.top, 20)
                 .padding(.leading, 120)
             }
+            
             VStack{
-                
                 ZStack(alignment: .leading) {
                     Text(fullText)
                         .foregroundColor(.gray)
                         .bold()
                     
                     HStack(spacing: 0) {
-                        //이미 파란색으로 채워진 텍스트들
                         Text(highlightedText)
                             .foregroundColor(Color(hex: "00B6BA"))
                             .bold()
@@ -174,8 +197,6 @@ struct KaraokeLyricView: View {
                 .font(.system(size: 96))
                 .padding(.bottom, 0)
                 
-                
-                
                 ZStack{
                     if hasNextLine {
                         ZStack(alignment: .leading) {
@@ -184,8 +205,6 @@ struct KaraokeLyricView: View {
                                 .bold()
                             
                             HStack(spacing: 0) {
-                                
-                                //이미 파란색으로 채워진 텍스트들
                                 Text(nexthighlightedtext)
                                     .foregroundColor(Color(hex: "00B6BA"))
                                     .bold()
@@ -542,7 +561,6 @@ struct KaraokeLyricView: View {
         guard segmentIndex < segments.count else { return 0 }
         let targetIndex = segments[segmentIndex].index
         
-        // 해당 index를 가진 첫 번째 라인 찾기
         for (lineIndex, segment) in segments.enumerated() {
             if segment.index == targetIndex {
                 return lineIndex
