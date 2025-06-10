@@ -509,7 +509,7 @@ struct KaraokeLyricView: View {
         
     func startPlaybackTimer(segment: LyricSegment) {
         stopTimer()
-        isPlaying = true // 재생 상태 업데이트
+        isPlaying = true
         
         playbackTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [self] timer in
             let currentTime = player.currentTime().seconds
@@ -524,7 +524,6 @@ struct KaraokeLyricView: View {
                         startMRPlayback(segment: segment)
                     }
                 } else {
-                    // MR 재생 완료 후 재생 상태 업데이트
                     isPlaying = false
                     stopMetronome()
                 }
