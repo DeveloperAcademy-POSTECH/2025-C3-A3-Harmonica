@@ -31,6 +31,24 @@ struct KaraokeLyricView: View {
     @State private var currentSegmentIndex = 0
     @State private var segments: [LyricSegment] = []
     @State private var lyricLines: [LyricLine] = []
+    
+    // 메트로놈 관련 State
+    @State private var metronomeStartTime: Date?
+    @State private var currentBeat: Int = 0
+    @State private var beatProgress: CGFloat = 0.0
+    @State private var isMetronomeActive = false
+    @State private var lastBeatTime: Date = Date()
+    
+    // 메트로놈 사운드용 오디오 플레이어
+    @State private var metronomePlayer: AVAudioPlayer?
+    
+    private var beatsPerMeasure: Int {
+        songInfo.timeSignatureTop
+    }
+    
+    private var beatDuration: Double {
+        60.0 / Double(songInfo.bpm)
+    }
 
     let timer = Timer.publish(every: 0.016, on: .main, in: .common).autoconnect() // ~60fps
     
@@ -80,7 +98,7 @@ struct KaraokeLyricView: View {
                 .font(.subheadline)
             
             HStack(spacing: 20) {
-                ForEach(0..<3, id: \.self) { index in
+                ForEach(0..<beatsPerMeasure, id: \.self) { index in
                     Circle()
                         .fill(getMetronomeCircleColor(for: index))
                         .frame(width: 30, height: 30)
@@ -88,6 +106,16 @@ struct KaraokeLyricView: View {
                             Circle()
                                 .stroke(Color.gray, lineWidth: 2)
                         )
+                        .overlay(
+                            index == currentBeat && isMetronomeActive ?
+                                Circle()
+                                    .trim(from: 0, to: beatProgress)
+                                    .stroke(Color.blue, lineWidth: 4)
+                                    .rotationEffect(.degrees(-90))
+                                : nil
+                        )
+                        .scaleEffect(index == currentBeat && isMetronomeActive ? 1.1 : 1.0)
+                        .animation(.easeInOut(duration: 0.1), value: currentBeat)
                 }
             }
             
@@ -219,6 +247,9 @@ struct KaraokeLyricView: View {
                 }
             }
         }
+        .onReceive(timer) { _ in
+            updateMetronome()
+        }
     }
     
     // MARK: - Functions
@@ -233,11 +264,84 @@ struct KaraokeLyricView: View {
         }
     }
     
+    func setupMetronomeSound() {
+        guard let soundURL = Bundle.main.url(forResource: "metronome_click", withExtension: "wav") else {
+            print("메트로놈 사운드 파일을 찾을 수 없습니다. 시스템 사운드를 사용합니다.")
+            return
+        }
+        
+        do {
+            metronomePlayer = try AVAudioPlayer(contentsOf: soundURL)
+            metronomePlayer?.prepareToPlay()
+            metronomePlayer?.volume = 0.5 // 볼륨 조절
+        } catch {
+            print("메트로놈 사운드 플레이어 설정 실패: \(error)")
+        }
+    }
+    
+    func playMetronomeSound() {
+        // 메트로놈 사운드 재생
+        if let player = metronomePlayer {
+            player.stop()
+            player.currentTime = 0
+            player.play()
+        } else {
+            // 메트로놈 사운드 파일이 없을 경우 시스템 사운드 사용
+            AudioServicesPlaySystemSound(1103) // 틱 사운드
+        }
+    }
+    
+    func startMetronome() {
+        metronomeStartTime = Date()
+        currentBeat = 0
+        beatProgress = 0.0
+        isMetronomeActive = true
+        playMetronomeSound()
+    }
+    
+    func stopMetronome() {
+        isMetronomeActive = false
+        metronomeStartTime = nil
+        currentBeat = 0
+        beatProgress = 0.0
+    }
+    
+    func updateMetronome() {
+        guard isMetronomeActive, let startTime = metronomeStartTime else { return }
+        
+        let elapsed = Date().timeIntervalSince(startTime)
+        let totalBeats = elapsed / beatDuration
+        
+        // 현재 박자 계산 (0부터 시작)
+        let newBeat = Int(totalBeats) % beatsPerMeasure
+        if newBeat != currentBeat {
+            currentBeat = newBeat
+            playMetronomeSound()
+            lastBeatTime = Date()
+        }
+        
+        // 현재 박자 내에서의 진행률
+        let beatElapsed = totalBeats - floor(totalBeats)
+        beatProgress = CGFloat(beatElapsed)
+    }
+    
     func getMetronomeCircleColor(for index: Int) -> Color {
-        // 더미 로직 - 수정 필요
+        // 카운트다운 중일 때
         if let count = countdown {
             return index < count ? .blue : .clear
         }
+        
+        // 메트로놈 활성화 시
+        if isMetronomeActive {
+            if index == currentBeat {
+                return .blue
+            } else if index < currentBeat {
+                return .blue.opacity(0.3)
+            } else {
+                return .clear
+            }
+        }
+        
         return .clear
     }
     
@@ -464,7 +568,9 @@ struct KaraokeLyricView: View {
     private func startCountdown() {
         countdownTimer?.invalidate()
         
-        countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.37, repeats: true) { timer in
+        let countdownInterval = beatDuration
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: countdownInterval, repeats: true) { timer in
             guard let currentCount = countdown else { return }
             
             countdown = currentCount + 1
@@ -496,7 +602,9 @@ struct KaraokeLyricView: View {
     private func startCountdownForMR() {
         countdownTimer?.invalidate()
         
-        countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.37, repeats: true) { timer in
+        let countdownInterval = beatDuration
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: countdownInterval, repeats: true) { timer in
             guard let currentCount = countdown else { return }
             
             countdown = currentCount + 1
