@@ -14,6 +14,7 @@ struct LottieView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> LottieAnimationView {
         let view = LottieAnimationView(name: animationName)
+        view.translatesAutoresizingMaskIntoConstraints = false
         view.loopMode = loopMode
         view.play()
         return view
