@@ -1,13 +1,39 @@
 import SwiftUI
 import ShazamKit
 import AVFoundation
+import MusicKit
+
+/*
+// 검색결과 페이지에 넘겨주는 데이터모델(샤잠킷 > 뮤직킷)
+struct Item: Identifiable, Equatable, Hashable {
+    let id: String
+    let title: String
+    let artist: String
+    let previewURL: URL?
+    let artworkURL: URL?
+    
+    init(
+        id: String,
+        title: String,
+        artist: String,
+        previewURL: URL? = nil,
+        artworkURL: URL? = nil)
+    {
+        self.id = id
+        self.title = title
+        self.artist = artist
+        self.previewURL = previewURL
+        self.artworkURL = artworkURL
+    }
+}
+ */
 
 // 곡 정보 데이터모델
 struct SongInfo: Hashable {
-    let title: String
-    let artist: String
-    let artworkURL: URL?
-    let previewURL: URL?
+    let s_title: String
+    let s_artist: String
+    let s_artworkURL: URL?
+    let s_previewURL: URL?
 }
 
 // 곡 인식 관리 클래스
@@ -118,7 +144,7 @@ struct SongSearchView: View {
             return .undetermined
         }
     }
-
+    
     // 마이크 사용권한 확인 & 샤잠 자동실행
     private func startRecognitionFlow() async {
         let permission = await requestMicPermission()
@@ -131,7 +157,7 @@ struct SongSearchView: View {
             promptText = "⚠️ 마이크 권한이 필요합니다"
         }
     }
-
+    
     // 검색 재시작 전 초기화 포함
     private func restartListening() async {
         recognizer.stopListening()
@@ -184,10 +210,10 @@ struct SongSearchView: View {
         .onReceive(recognizer.$matchedSong) { item in
             if let item = item {
                 let info = SongInfo(
-                    title: item.title ?? "제목 없음",
-                    artist: item.artist ?? "아티스트 없음",
-                    artworkURL: item.artworkURL,
-                    previewURL: item.appleMusicURL
+                    s_title: item.title ?? "제목 없음",
+                    s_artist: item.artist ?? "아티스트 없음",
+                    s_artworkURL: item.artworkURL,
+                    s_previewURL: item.appleMusicURL
                 )
                 path.append(NavigationTarget.result(info))
             }
@@ -202,3 +228,7 @@ struct SongSearchView: View {
     }
 }
 
+// 샤잠킷에서 뮤직킷(애플 뮤직 라이브러리) 데이터를 받아오는 함수
+func getAppleMusicData() -> [String] {
+    
+}

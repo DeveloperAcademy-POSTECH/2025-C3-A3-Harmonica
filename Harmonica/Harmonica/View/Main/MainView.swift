@@ -1,97 +1,105 @@
 import SwiftUI
+import Glur
 
 struct MainView: View {
-    
+    @State private var isSTTPressed: Bool = false
+    @State private var isShazamPressed: Bool = false
     @State private var path = NavigationPath()
-    
     var body: some View {
-        NavigationStack(path: $path) {
-            HStack {
-                // 화면 좌측 [불렀던 곡(히스토리)] 세로 스크롤뷰
-                HistoryView()
-                // 화면 우측 [App이름 로고]와 [두가지 방식의 노래검색 버튼]
-                VStack {
-                    Text("harmonica")
-                        .font(Font.custom("Pacifico", size: 64))
-                        .foregroundColor(Color(red: 0.49, green: 0, blue: 0))
-                    Spacer()
-                    // [음악인식 검색뷰(듀이) 이동버튼]
-                    NavigationLink(destination: SongSearchView(path: $path)) {
-                        ZStack{
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 484, height: 274)
-                                .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                                .cornerRadius(20)
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 460, height: 250)
-                                .background(Color(red: 0.82, green: 0.8, blue: 0.77))
-                                .cornerRadius(30)
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 426, height: 220)
-                                .background(Color(red: 0.92, green: 0.9, blue: 0.88))
-                                .cornerRadius(100)
-                                .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 100)
-                                        .inset(by: 2.5)
-                                        .stroke(.white, lineWidth: 5)
-                                )
-                            Text("음악 들려줘서 \n 찾기")
-                                .font(
-                                    Font.custom("Pretendard JP", size: 55)
-                                        .weight(.bold)
-                                )
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                        }
-                    }
-                    // [음성노래제목 검색뷰(루크) 이동버튼]
-                    NavigationLink(destination: STTView()) {
-                        ZStack{
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 484, height: 274)
-                                .background(Color(red: 0.22, green: 0.22, blue: 0.22))
-                                .cornerRadius(20)
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 460, height: 250)
-                                .background(Color(red: 0.82, green: 0.8, blue: 0.77))
-                                .cornerRadius(30)
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(width: 426, height: 220)
-                                .background(Color(red: 0.92, green: 0.9, blue: 0.88))
-                                .cornerRadius(100)
-                                .shadow(color: .black.opacity(0.25), radius: 25, x: 0, y: 50)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 100)
-                                        .inset(by: 2.5)
-                                        .stroke(.white, lineWidth: 5)
-                                )
-                            Text("제목 말해서 \n 찾기")
-                                .font(
-                                    Font.custom("Pretendard JP", size: 55)
-                                        .weight(.bold)
-                                )
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                        }
-                    }
-                }
+        NavigationStack(path: $path){
+            HStack(spacing: 24) {
+                SongBox(SongName: "나그네 고향", AlbumCover: Image("나그네고향"))
+                SongBox(SongName: "내 여자 내 남자", AlbumCover: Image("내 여자 내 남자 앨범 커버"))
+                SongBox(SongName: "")
             }
-            .navigationViewStyle(StackNavigationViewStyle())
-            .padding()
-            
-            .navigationDestination(for: NavigationTarget.self) { target in
-                switch target {
-                case .result(let songInfo):
-                    SearchResultView(songInfo: songInfo, path: $path)
+            .padding(.bottom, 12)
+            HStack {
+                ZStack {
+                    Image(isShazamPressed ? "ShazamView_Pressed" : "ShazamView_Unpressed")
+                }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            isShazamPressed = true
+                        }
+                        .onEnded { _ in
+                            isShazamPressed = false
+                            path.append("shazam")
+                        }
+                )
+                .padding(.trailing, 14)
+                
+
+                ZStack {
+                    Image(isSTTPressed ? "STTSearchView_Pressed" : "STTSearchView_Unpressed")
+                }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged{ _ in
+                                isSTTPressed = true
+                        }
+                        .onEnded{ _ in
+                            isSTTPressed = false
+                            path.append("STT")
+                        }
+                )
+            }
+            .navigationDestination(for: String.self) { value in
+                if value == "shazam" {
+                    SongSearchView()
+                }
+                else if value == "STT" {
+                    STTView()
                 }
             }
         }
     }
+}
+
+struct SongBox:View {
+    @State var SongName:String = ""
+    @State var AlbumCover:Image?
+    var body: some View {
+        Button(action: {}){
+            ZStack(alignment: .bottomLeading){
+                if let albumImage = AlbumCover {
+                    albumImage
+                        .resizable()
+                        .scaledToFit()
+                        .glur(radius: 6.0,
+                              offset: 0,
+                              interpolation: 0.8,
+                              direction: .down
+                        )
+                        .cornerRadius(16)
+                        .frame(width: 385, height: 269)
+                }
+                
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "2E4E4E").opacity(0.7), Color(hex: "254142")],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 385, height: 269)
+                Text("\(SongName)")
+                    .font(.system(size: 45))
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.white)
+                    .multilineTextAlignment(.leading)
+                    .padding()
+                    .padding(.leading,6)
+                    .padding(.bottom, 4)
+            }
+        }
+    }
+}
+
+#Preview {
+    //    SongBox(SongName: "나그네 고향")
+    MainView()
 }
