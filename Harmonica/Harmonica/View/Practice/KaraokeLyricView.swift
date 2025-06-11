@@ -46,6 +46,8 @@ struct KaraokeLyricView: View {
     @State private var isRetryPressed: Bool = false
     @State private var isNextPressed: Bool = false
     
+    @EnvironmentObject var navigationManager: NavigationManager
+    
     private var beatsPerMeasure: Int {
         songInfo.timeSignatureTop
     }
@@ -87,7 +89,7 @@ struct KaraokeLyricView: View {
             VStack {
                 HStack {
                     Button(action: {
-                        
+                        navigationManager.navigate(to: .End)
                     }) {
                         Image("Power")
                             .resizable()
@@ -336,6 +338,7 @@ struct KaraokeLyricView: View {
         .onReceive(timer) { _ in
             updateMetronome()
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     // MARK: - Functions
@@ -357,7 +360,7 @@ struct KaraokeLyricView: View {
         do {
             metronomePlayer = try AVAudioPlayer(contentsOf: soundURL)
             metronomePlayer?.prepareToPlay()
-            metronomePlayer?.volume = 0.7
+            metronomePlayer?.volume = 0.5
         } catch {
             print("FAIL metronome sound setting: \(error)")
         }

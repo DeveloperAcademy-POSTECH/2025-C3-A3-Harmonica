@@ -8,7 +8,7 @@
 import SwiftUI
 
 // View의 종류에 대한 Enum
-enum ViewType {
+enum ViewType: Hashable {
     case STT
     case Shazam
     case Practice
