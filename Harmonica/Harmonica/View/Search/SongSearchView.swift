@@ -152,7 +152,7 @@ struct SongSearchView: View {
     var body: some View {
         ZStack{
             // 샤잠 로띠 애니메이션 삽입
-            LottieView3(animationName: "SongSearchView")
+            LottieView(animationName: "SongSearchView(진짜 최종)")
             VStack {
                 HStack {
                     Button(action: {
@@ -241,19 +241,4 @@ struct SongSearchView: View {
         }
         Spacer()
     }
-}
-
-struct LottieView3: UIViewRepresentable {
-    let animationName: String
-    var loopMode: LottieLoopMode = .loop
-    
-    func makeUIView(context: Context) -> LottieAnimationView {
-        let view = LottieAnimationView(name: animationName)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.loopMode = loopMode
-        view.play()
-        return view
-    }
-    
-    func updateUIView(_ uiView: LottieAnimationView, context: Context) {}
 }

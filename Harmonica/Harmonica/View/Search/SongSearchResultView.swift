@@ -22,7 +22,7 @@ extension SongSearchResultView: View {
                     VStack(spacing: 56) {
                         Text("찾으시던 노래가 맞으신가요?")
                             .font(.system(size: 48, weight: .semibold))
-                            .foregroundStyle(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
+                            .foregroundColor(Color(hex: "254142"))
                         
                         if let artworkURL = item.artworkURL {
                             HStack(spacing: 25) {
@@ -89,6 +89,7 @@ extension SongSearchResultView: View {
                     .frame(height: 546)
                     .padding(.vertical)
                 }
+
                 .frame(width: 1022, height: 687)
                 .onAppear {
                     if let url = item.previewURL {
