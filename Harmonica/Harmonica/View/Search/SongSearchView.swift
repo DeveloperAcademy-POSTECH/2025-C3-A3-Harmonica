@@ -96,7 +96,11 @@ struct SongSearchView: View {
     @StateObject private var recognizer = ShazamRecognizer()
     @State private var promptText = "노래를 들려주세요."
     @State private var permissionChecked = false
-//    @Binding var path: NavigationPath
+    @EnvironmentObject var navigationManager: NavigationManager
+    
+    //    @State private var isShowPermissionAlert = false
+    //    @State private var isShowRecognizerAlert = false
+    //    @State private var isMatchFound = false
     
     // 마이크 권한 요청
     private func requestMicPermission() async -> MicPermissionStatus {
@@ -195,6 +199,36 @@ struct SongSearchView: View {
 //            }
             Spacer()
         }
+        // 화면 진입시 마이크 사용권한 확인 & 샤잠 자동실행
+        .onAppear {
+            Task {
+                if !permissionChecked {
+                    permissionChecked = true
+                    await startRecognitionFlow()
+                } else {
+                    await restartListening() // 다시 돌아왔을 때도 자동 시작
+                }
+            }
+        }
+        // 곡 검색에 성공시 matchedSong을 감지하여 상태변경
+        .onReceive(recognizer.$matchedSong) { item in
+            if let item = item {
+                let info = ShazamSongInformation(
+                    s_title: item.title ?? "제목 없음",
+                    s_artist: item.artist ?? "아티스트 없음",
+                    s_artworkURL: item.artworkURL,
+                    s_previewURL: item.appleMusicURL
+                )
+//                path.append(NavigationTarget.result(info))
+            }
+        }
+        // 매치하는 곡 검색에 실패시
+        .onReceive(recognizer.$didNotFindSong) { notFound in
+            if notFound {
+//                path.append(NavigationTarget.result(nil))
+            }
+        }
+        Spacer()
     }
 }
 
