@@ -13,6 +13,7 @@ enum ViewType: Hashable {
     case Shazam
     case Practice
     case End
+    case Loading
 }
 
 // MARK: 화면 전환을 관리하는 객체

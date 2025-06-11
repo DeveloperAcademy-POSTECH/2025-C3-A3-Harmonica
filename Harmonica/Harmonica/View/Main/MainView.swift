@@ -1,5 +1,6 @@
 import SwiftUI
 import Glur
+import AVFoundation
 
 struct MainView: View {
     @State private var isSTTPressed: Bool = false
@@ -25,6 +26,7 @@ struct MainView: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged { _ in
                             isShazamPressed = true
+                            playSound(sound: "ButtonSound", type: "mp3")
                         }
                         .onEnded { _ in
                             isShazamPressed = false
@@ -42,12 +44,16 @@ struct MainView: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged{ _ in
                                 isSTTPressed = true
+                            playSound(sound: "ButtonSound", type: "mp3")
                         }
                         .onEnded{ _ in
                             isSTTPressed = false
                             navigationManager.navigate(to: .STT)
                         }
                 )
+                .onTapGesture {
+                    playSound(sound: "ButtonSound", type: "mp3")
+                }
             }
             .navigationDestination(for: ViewType.self) { value in
                             switch value {
@@ -62,6 +68,9 @@ struct MainView: View {
                                     .environmentObject(navigationManager)
                             case .End:
                                 PracticeCompleteView()
+                                    .environmentObject(navigationManager)
+                            case .Loading:
+                                LoadingView()
                                     .environmentObject(navigationManager)
                             }
                         }
@@ -83,7 +92,10 @@ struct SongBox:View {
     @State var AlbumCover:Image?
     var action: () -> Void = {}
     var body: some View {
-        Button(action: action){
+        Button(action: {
+            action()
+            playSound(sound: "ButtonSound", type: "mp3")
+        }){
             ZStack(alignment: .bottomLeading){
                 if let albumImage = AlbumCover {
                     albumImage
@@ -148,6 +160,7 @@ struct HistoryResultView: View {
                   }
                   HStack(spacing: 50) {
                     Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
                         isPresented = false
                     }) {
                       HStack {
@@ -165,8 +178,9 @@ struct HistoryResultView: View {
                     .frame(width: 416, height: 100.0)
                     
                     Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
                         isPresented = false
-                        navigationManager.navigate(to: .Practice)
+                        navigationManager.navigate(to: .Loading)
                     }) {
                       HStack {
                         Image(systemName: "music.quarternote.3")

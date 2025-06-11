@@ -15,12 +15,21 @@ struct HarmonicaApp: App {
         }
     }
     
+    @State private var isSplashFinished: Bool = false
+    
     var body: some Scene {
         WindowGroup {
-//            KaraokeLyricView()
+//            if isSplashFinished {
+//                MainView()
+//            }
+////            KaraokeLyricView()
+//            else{
+//                SplashView{
+//                    isSplashFinished = true
+//                }
+//            }
+//
             MainView()
-//            SongSearchView()
-//            SearchResultView()
             .modelContainer(container)
             .onAppear {
                 Task { @MainActor in

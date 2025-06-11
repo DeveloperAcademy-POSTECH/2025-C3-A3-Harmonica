@@ -118,6 +118,7 @@ extension STTView: View {
         HStack {
           
           Button(action: {
+              playSound(sound: "ButtonSound", type: "mp3")
               navigationManager.poptoRoot()
           }) {
             Image(systemName: "arrow.left.circle.fill")
@@ -178,7 +179,8 @@ extension STTView: View {
       musicManager.stopPreview()
       
       if selectedSongID != nil {
-        navigateToDetail = true
+//        navigateToDetail = true
+          navigationManager.navigate(to: .Loading)
       } else {
         startSTT()
       }
@@ -197,6 +199,9 @@ extension STTView: View {
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }
       isShowRecognizerAlert = true
+    }
+    .onChange(of: self.item) { _, _ in
+        
     }
     .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
       Button(action: {
@@ -277,6 +282,7 @@ extension STTView.CustomTextFieldComponent: View {
           RoundedRectangle(cornerRadius: 42)
             .fill(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
         )
+        .disabled(true)
         .overlay(alignment: .leading) {
           Text(text)
             .font(.system(size: 48))

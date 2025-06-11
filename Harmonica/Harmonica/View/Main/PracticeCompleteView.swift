@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct PracticeCompleteView: View {
     var index: Int = Int.random(in: 0..<5)
@@ -18,6 +19,7 @@ struct PracticeCompleteView: View {
     "노래 정말 잘 부르시는 걸요?":"가수로 데뷔해도 되겠어요!❤️"]
 
     @EnvironmentObject var navigationManager : NavigationManager
+    @State private var player: AVAudioPlayer?
     
     var body: some View {
         ZStack {
@@ -49,6 +51,7 @@ struct PracticeCompleteView: View {
                 //TODO: 곡 끝까지 재생 후 종료 이외에 연습 중 종료는 버튼 어떻게 표시할 지 확인 후 텍스트 적용
                 HStack(spacing: 50) {
                     Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
                         navigationManager.navigate(to: .Practice)
                     }) {
                         HStack {
@@ -66,6 +69,7 @@ struct PracticeCompleteView: View {
                     .frame(width: 416, height: 100.0)
                     
                     Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
                         navigationManager.poptoRoot()
                     }) {
                         HStack {
@@ -84,6 +88,19 @@ struct PracticeCompleteView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            if let url = Bundle.main.url(forResource: "Cheering", withExtension: "mp3") {
+                do {
+                    player = try AVAudioPlayer(contentsOf: url)
+                    player?.prepareToPlay()
+                    player?.play()
+                } catch {
+                    print("Error playing Cheering.mp3: \(error.localizedDescription)")
+                }
+            } else {
+                print("Cheering.mp3 not found")
+            }
+        }
     }
 }
 
