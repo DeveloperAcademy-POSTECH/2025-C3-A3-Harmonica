@@ -16,9 +16,8 @@ struct PracticeCompleteView: View {
     "노래가 점점 더 빛이 나네요!":"다음에도 꼭 오셔서 멋진 무대 보여주세요~!",
     "오늘도 고생 많으셨어요!":"다음에 더 멋진 목소리 들려주세요, 화이팅!",
     "노래 정말 잘 부르시는 걸요?":"가수로 데뷔해도 되겠어요!❤️"]
-    
-    // TODO: NavigationStack 어떻게 조작해야 할 지 학습 후 적용
-    @Binding var path: NavigationPath
+
+    @EnvironmentObject var navigationManager : NavigationManager
     
     var body: some View {
         ZStack {
@@ -42,7 +41,7 @@ struct PracticeCompleteView: View {
                     .foregroundColor(.black)
                     .padding(.bottom, 140)
                 
-                LottieView(animationName: "happy")
+                LottieView(animationName: "wow")
                     .padding(.bottom, 30)
                     .frame(width: 300, height: 271)
                 
@@ -50,7 +49,7 @@ struct PracticeCompleteView: View {
                 //TODO: 곡 끝까지 재생 후 종료 이외에 연습 중 종료는 버튼 어떻게 표시할 지 확인 후 텍스트 적용
                 HStack(spacing: 50) {
                     Button(action: {
-                        // TODO: PracticeView 진행상황 초기화하고 PracticeView로 이동
+                        navigationManager.navigate(to: .Practice)
                     }) {
                         HStack {
                             Image(systemName: "arrow.counterclockwise.circle.fill")
@@ -67,7 +66,7 @@ struct PracticeCompleteView: View {
                     .frame(width: 416, height: 100.0)
                     
                     Button(action: {
-                        path.removeLast(path.count)
+                        navigationManager.poptoRoot()
                     }) {
                         HStack {
                             Image(systemName: "power.circle.fill")
@@ -84,9 +83,10 @@ struct PracticeCompleteView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
     }
 }
 
 #Preview {
-    PracticeCompleteView(path: .constant(NavigationPath()))
+    PracticeCompleteView()
 }

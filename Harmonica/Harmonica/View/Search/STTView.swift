@@ -2,6 +2,7 @@ import SwiftUI
 import Lottie
 
 struct STTView {
+  @EnvironmentObject var navigationManager: NavigationManager
   @State private var speechRecognizer = SpeechRecognizer()
   
   private let queryGenerateManager = QueryGenerateManager()
@@ -117,7 +118,7 @@ extension STTView: View {
         HStack {
           
           Button(action: {
-            // 백버튼
+              navigationManager.poptoRoot()
           }) {
             Image(systemName: "arrow.left.circle.fill")
               .resizable()
@@ -191,6 +192,7 @@ extension STTView: View {
         },
         playAction: { musicManager.playPreview(for: $0)},
         resetActoin: { self.isShowSearchResult = false  })
+      .environmentObject(navigationManager)
     }
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }
@@ -328,5 +330,6 @@ struct LottieView2: UIViewRepresentable {
 
 #Preview {
   STTView()
+        .environmentObject(NavigationManager())
 }
 

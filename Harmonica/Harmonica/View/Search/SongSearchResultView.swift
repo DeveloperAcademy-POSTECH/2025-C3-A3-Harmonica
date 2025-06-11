@@ -6,6 +6,9 @@ struct SongSearchResultView {
   let selectAction: (String) -> Void // 노래를 선택하고 아이디를 넘겨줌
   let playAction: (URL) -> Void // 미리듣기 재생 액션
   let resetActoin: () -> Void // 메인 뷰로 이동
+    let musicManager = MusicManager()
+    
+    @EnvironmentObject var navigationManager: NavigationManager
 }
 
 extension SongSearchResultView { }
@@ -60,7 +63,10 @@ extension SongSearchResultView: View {
               .frame(width: 416, height: 100.0)
               
               Button(action: {
-                selectAction(item.id)
+//                selectAction(item.id)\
+                  musicManager.stopPreview()
+                  navigationManager.navigate(to: .Practice)
+                  
               }) {
                 HStack {
                   Image(systemName: "music.quarternote.3")
@@ -76,7 +82,7 @@ extension SongSearchResultView: View {
               }
             }
           }
-          .padding(.vertical, )
+          .padding(.vertical, 10)
         }
         .frame(width: 1022, height: 687)
         .onAppear {
@@ -95,7 +101,8 @@ extension SongSearchResultView: View {
           
           HStack(spacing: 50) {
             Button(action: {
-              resetActoin()
+//              resetActoin()
+                navigationManager.poptoRoot()
             }) {
               HStack {
                 Image(systemName: "power.circle.fill")

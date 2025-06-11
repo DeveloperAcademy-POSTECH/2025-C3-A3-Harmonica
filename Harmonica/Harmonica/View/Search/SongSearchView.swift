@@ -120,7 +120,7 @@ struct SongSearchView: View {
     @StateObject private var recognizer = ShazamRecognizer()
     @State private var promptText = "노래를 들려주세요"
     @State private var permissionChecked = false
-    @Binding var path: NavigationPath
+    @EnvironmentObject var navigationManager: NavigationManager
     
     //    @State private var isShowPermissionAlert = false
     //    @State private var isShowRecognizerAlert = false
@@ -168,7 +168,7 @@ struct SongSearchView: View {
         VStack {
             HStack {
                 Button("이전") {
-                    path = NavigationPath() // 메인 뷰로 복귀
+                    navigationManager.pop()
                 }
                 Spacer()
                 
@@ -215,13 +215,13 @@ struct SongSearchView: View {
                     s_artworkURL: item.artworkURL,
                     s_previewURL: item.appleMusicURL
                 )
-                path.append(NavigationTarget.result(info))
+//                path.append(NavigationTarget.result(info))
             }
         }
         // 매치하는 곡 검색에 실패시
         .onReceive(recognizer.$didNotFindSong) { notFound in
             if notFound {
-                path.append(NavigationTarget.result(nil))
+//                path.append(NavigationTarget.result(nil))
             }
         }
         Spacer()
