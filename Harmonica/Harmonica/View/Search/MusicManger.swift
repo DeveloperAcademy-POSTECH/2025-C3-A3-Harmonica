@@ -32,7 +32,9 @@ final class MusicManager {
 extension MusicManager {
   func searchTrack(query: String) async throws -> Item? {
     let request = MusicCatalogSearchRequest(term: query, types: [Song.self])
-    
+
+    guard query != "" else { return nil }
+   
     do {
       let response = try await request.response()
       
