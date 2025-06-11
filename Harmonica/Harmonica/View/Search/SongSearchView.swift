@@ -42,8 +42,17 @@ class ShazamRecognizer: NSObject, ObservableObject {
         }
     }
     
+    
     // 노래 들을 때 함수
     func startListening() throws {
+        //MARK: 임시로 넣었습니다
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.record, mode: .default, options: [])
+            try audioSession.setActive(true)
+        } catch {
+            print("❌ audioSession 설정 실패: \(error)")
+        }
 #if targetEnvironment(simulator)
         print("⚠️ 시뮬레이터에서는 마이크 인식이 비활성화됩니다.")
         return
@@ -147,7 +156,8 @@ struct SongSearchView: View {
             VStack {
                 HStack {
                     Button(action: {
-                        // 백버튼
+                        navigationManager.poptoRoot()
+                        playSound(sound: "ButtonSound", type: "mp3")
                     }) {
                         Image(systemName: "arrow.left.circle.fill")
                             .resizable()
@@ -199,6 +209,7 @@ struct SongSearchView: View {
 //            }
             Spacer()
         }
+        .navigationBarBackButtonHidden()
         // 화면 진입시 마이크 사용권한 확인 & 샤잠 자동실행
         .onAppear {
             Task {
