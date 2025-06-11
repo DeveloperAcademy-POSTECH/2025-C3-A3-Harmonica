@@ -32,6 +32,7 @@ struct KaraokeLyricView: View {
     @State private var segments: [LyricSegment] = []
     @State private var lyricLines: [LyricLine] = []
     @State private var isPlaying = false
+    @State private var isResting = false
     
     // 메트로놈 관련 State
     @State private var metronomeStartTime: Date?
@@ -111,7 +112,7 @@ struct KaraokeLyricView: View {
             }
             .frame(width: 1250, height: 279)
                 
-            if isPlaying || countdown != nil {
+            if (isPlaying || countdown != nil) && !isResting {
                 HStack(spacing: 20) {
                     ForEach(0..<beatsPerMeasure, id: \.self) { index in
                         ZStack {
@@ -301,7 +302,7 @@ struct KaraokeLyricView: View {
         }
         
         .onReceive(timer) { _ in
-            guard countdown == nil else { return }
+            guard countdown == nil && !isResting else { return }
             guard currentCharacterIndex < lyricsWithDuration.count else { return }
             
             let elapsed = Date().timeIntervalSince(startTime)
@@ -318,7 +319,7 @@ struct KaraokeLyricView: View {
             }
         }
         .onReceive(timer) { _ in
-            guard countdown == nil else { return }
+            guard countdown == nil && !isResting else { return }
             guard hasNextLine else { return }
             guard nextCharacterIndex < NextlyricsWithDuration.count else { return }
             
@@ -336,7 +337,9 @@ struct KaraokeLyricView: View {
             }
         }
         .onReceive(timer) { _ in
-            updateMetronome()
+            if !isResting {
+                updateMetronome()
+            }
         }
         .navigationBarBackButtonHidden(true)
     }
@@ -367,7 +370,7 @@ struct KaraokeLyricView: View {
     }
     
     func playMetronomeSound() {
-        guard isPlaying || countdown != nil else { return }
+        guard (isPlaying || countdown != nil) && !isResting else { return }
         
         if let player = metronomePlayer {
             player.stop()
@@ -395,7 +398,7 @@ struct KaraokeLyricView: View {
     }
     
     func updateMetronome() {
-        guard (isPlaying || countdown != nil) && isMetronomeActive, let startTime = metronomeStartTime else { return }
+        guard (isPlaying || countdown != nil) && isMetronomeActive && !isResting, let startTime = metronomeStartTime else { return }
         
         let elapsed = Date().timeIntervalSince(startTime)
         let totalBeats = elapsed / beatDuration
@@ -417,7 +420,7 @@ struct KaraokeLyricView: View {
             return index <= count
         }
         
-        if isMetronomeActive {
+        if isMetronomeActive && !isResting {
             return index <= currentBeat
         }
         
@@ -571,7 +574,7 @@ struct KaraokeLyricView: View {
         mode = .ar
         
         let segment = segments[currentSegmentIndex]
-        let fileName = songInfo.arFileName // 항상 AR부터 시작
+        let fileName = songInfo.arFileName
         
         guard let url = Bundle.main.url(forResource: fileName.replacingOccurrences(of: ".mp3", with: ""), withExtension: "mp3") else {
             print("오디오 파일을 찾을 수 없습니다: \(fileName)")
@@ -604,7 +607,10 @@ struct KaraokeLyricView: View {
                             self.moveToNextSegment()
                         }
                     } else {
-                        autoProgressTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+                        isResting = true
+                        stopMetronome()
+                        autoProgressTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
+                            self.isResting = false
                             mode = .mr
                             startMRPlayback(segment: segment)
                         }
@@ -671,6 +677,7 @@ struct KaraokeLyricView: View {
     func stopPlayback() {
         player.pause()
         isPlaying = false
+        isResting = false
         stopTimer()
         stopMetronome()
     }
