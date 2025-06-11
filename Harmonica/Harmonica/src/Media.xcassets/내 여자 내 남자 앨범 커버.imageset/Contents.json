@@ -1,17 +1,16 @@
 {
   "images" : [
     {
-      "filename" : "나그네고향.svg",
+      "filename" : "내 여자 내 남자 앨범커버.svg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "나그네고향 1.svg",
+      "filename" : "내 여자 내 남자 앨범커버 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "나그네고향 2.svg",
       "idiom" : "universal",
       "scale" : "3x"
     }
