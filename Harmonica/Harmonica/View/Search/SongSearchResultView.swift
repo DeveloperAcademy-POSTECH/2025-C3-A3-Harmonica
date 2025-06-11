@@ -46,6 +46,7 @@ extension SongSearchResultView: View {
             }
             HStack(spacing: 50) {
               Button(action: {
+                  playSound(sound: "ButtonSound", type: "mp3")
                 closeAction()
               }) {
                 HStack {
@@ -63,9 +64,9 @@ extension SongSearchResultView: View {
               .frame(width: 416, height: 100.0)
               
               Button(action: {
-//                selectAction(item.id)\
+                  playSound(sound: "ButtonSound", type: "mp3")
+                selectAction(item.id)
                   musicManager.stopPreview()
-                  navigationManager.navigate(to: .Practice)
                   
               }) {
                 HStack {
@@ -101,6 +102,7 @@ extension SongSearchResultView: View {
           
           HStack(spacing: 50) {
             Button(action: {
+                playSound(sound: "ButtonSound", type: "mp3")
 //              resetActoin()
                 navigationManager.poptoRoot()
             }) {
@@ -119,6 +121,7 @@ extension SongSearchResultView: View {
             .frame(width: 416, height: 100.0)
             
             Button(action: {
+                playSound(sound: "ButtonSound", type: "mp3")
               closeAction()
             }) {
               HStack {

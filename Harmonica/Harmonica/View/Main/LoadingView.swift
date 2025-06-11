@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct LoadingView: View {
+    @EnvironmentObject var navigationManager: NavigationManager
     var index: Int = Int.random(in: 0..<5)
     var CheeringText: [String:String] = [
     "오늘도 멋진 노래 한 곡 불러봐요!":"할머니 최고에요!",
@@ -44,9 +43,15 @@ struct LoadingView: View {
                     .foregroundColor(.black)
                     .padding(.bottom, 140)
                 
-                LottieView(animationName: "happy")
+                LottieView(animationName: "singing")
                     .padding(.bottom, 30)
                     .frame(width: 300, height: 271)
+            }
+        }
+        .navigationBarBackButtonHidden()
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                navigationManager.navigate(to: .Practice)
             }
         }
     }

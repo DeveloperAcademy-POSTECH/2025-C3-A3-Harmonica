@@ -89,6 +89,7 @@ struct KaraokeLyricView: View {
             VStack {
                 HStack {
                     Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
                         navigationManager.navigate(to: .End)
                     }) {
                         Image("Power")
@@ -230,7 +231,10 @@ struct KaraokeLyricView: View {
         .padding(.top, 16)
             
         HStack(spacing: 45){
-            Button(action: previous) {
+            Button(action: {
+                playSound(sound: "ButtonSound", type: "mp3")
+                previous()
+            }) {
                 Image(isBackPressed ? "BackPressed" : "Back")
                     .resizable()
                     .frame(width: 172, height: 172)
@@ -248,7 +252,10 @@ struct KaraokeLyricView: View {
             }
             .disabled(currentSegmentIndex <= 0)
             
-            Button(action: replay) {
+            Button(action: {
+                playSound(sound: "ButtonSound", type: "mp3")
+                replay()
+            }) {
                 Image(isRetryPressed ? "Retry_Pressed" : "Retry")
                     .resizable()
                     .frame(width: 172, height: 172)
@@ -265,7 +272,10 @@ struct KaraokeLyricView: View {
                     )
             }
             
-            Button(action: next) {
+            Button(action: {
+                playSound(sound: "ButtonSound", type: "mp3")
+                next()
+            }) {
                 Image(isNextPressed ? "Next_Pressed" : "Next")
                     .resizable()
                     .frame(width: 172, height: 172)
