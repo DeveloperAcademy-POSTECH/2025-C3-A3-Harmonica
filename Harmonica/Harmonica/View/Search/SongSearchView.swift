@@ -1,32 +1,8 @@
 import SwiftUI
 import ShazamKit
 import AVFoundation
-import MusicKit
-
-/*
-// 검색결과 페이지에 넘겨주는 데이터모델(샤잠킷 > 뮤직킷)
-struct Item: Identifiable, Equatable, Hashable {
-    let id: String
-    let title: String
-    let artist: String
-    let previewURL: URL?
-    let artworkURL: URL?
-    
-    init(
-        id: String,
-        title: String,
-        artist: String,
-        previewURL: URL? = nil,
-        artworkURL: URL? = nil)
-    {
-        self.id = id
-        self.title = title
-        self.artist = artist
-        self.previewURL = previewURL
-        self.artworkURL = artworkURL
-    }
-}
- */
+//import MusicKit
+import Lottie
 
 // 곡 정보 데이터모델
 struct ShazamSongInformation: Hashable {
@@ -118,7 +94,7 @@ enum NavigationTarget: Hashable {
 struct SongSearchView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var recognizer = ShazamRecognizer()
-    @State private var promptText = "노래를 들려주세요"
+    @State private var promptText = "노래를 들려주세요."
     @State private var permissionChecked = false
     @EnvironmentObject var navigationManager: NavigationManager
     
@@ -165,35 +141,63 @@ struct SongSearchView: View {
     }
     
     var body: some View {
-        VStack {
-            HStack {
-                Button("이전") {
-                    navigationManager.pop()
+        ZStack{
+            // 샤잠 로띠 애니메이션 삽입
+            LottieView3(animationName: "SongSearchView")
+            VStack {
+                HStack {
+                    Button(action: {
+                        // 백버튼
+                    }) {
+                        Image(systemName: "arrow.left.circle.fill")
+                            .resizable()
+                            .frame(width: 80, height: 80)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
+                    }
+                    Spacer()
                 }
+                .padding(.top, 56)
+                .padding(.horizontal, 56)
                 Spacer()
                 
-                Button("검색") {
-                    Task {
+                Text(promptText)
+                    .font(.system(size: 64, weight: .semibold))                    .multilineTextAlignment(.center)
+                    .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.5), value: promptText)
+                    .padding(.bottom, 80)
+            }
+            // 화면 진입시 마이크 사용권한 확인 & 샤잠 자동실행
+            .onAppear {
+                Task {
+                    if !permissionChecked {
+                        permissionChecked = true
                         await startRecognitionFlow()
+                    } else {
+                        await restartListening() // 다시 돌아왔을 때도 자동 시작
                     }
                 }
             }
+            // 곡 검색에 성공시 matchedSong을 감지하여 상태변경
+//            .onReceive(recognizer.$matchedSong) { item in
+//                if let item = item {
+//                    let info = ShazamSongInformation(
+//                        s_title: item.title ?? "제목 없음",
+//                        s_artist: item.artist ?? "아티스트 없음",
+//                        s_artworkURL: item.artworkURL,
+//                        s_previewURL: item.appleMusicURL
+//                    )
+//                    path.append(NavigationTarget.result(info))
+//                }
+//            }
+            // 매치하는 곡 검색에 실패시
+//            .onReceive(recognizer.$didNotFindSong) { notFound in
+//                if notFound {
+//                    path.append(NavigationTarget.result(nil))
+//                }
+//            }
             Spacer()
-            
-            // 💛 To-do : [로띠 애니메이션으로 대체될 부분]
-            Image(systemName: "waveform")
-                .resizable()
-                .frame(width: 200, height: 200)
-                .symbolEffect(.breathe)
-            
-            Spacer()
-            
-            Text(promptText)
-                .font(.title)
-                .multilineTextAlignment(.center)
-                .foregroundColor(Color(red: 0.22, green: 0.22, blue: 0.22))
-                .transition(.opacity)
-                .animation(.easeInOut(duration: 0.5), value: promptText)
         }
         // 화면 진입시 마이크 사용권한 확인 & 샤잠 자동실행
         .onAppear {
@@ -228,7 +232,17 @@ struct SongSearchView: View {
     }
 }
 
-// 샤잠킷에서 뮤직킷(애플 뮤직 라이브러리) 데이터를 받아오는 함수
-//func getAppleMusicData() -> [String] {
-//    
-//}
+struct LottieView3: UIViewRepresentable {
+    let animationName: String
+    var loopMode: LottieLoopMode = .loop
+    
+    func makeUIView(context: Context) -> LottieAnimationView {
+        let view = LottieAnimationView(name: animationName)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.loopMode = loopMode
+        view.play()
+        return view
+    }
+    
+    func updateUIView(_ uiView: LottieAnimationView, context: Context) {}
+}
