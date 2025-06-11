@@ -1,17 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "내 여자 내 남자 앨범커버.svg",
+      "filename" : "BackPressed.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "내 여자 내 남자 앨범커버 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "내 여자 내 남자 앨범커버 2.svg",
       "idiom" : "universal",
       "scale" : "3x"
     }
