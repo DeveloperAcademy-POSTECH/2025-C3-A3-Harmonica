@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		32D8AA8C2DF9E8B900F10CCC /* Glur in Frameworks */ = {isa = PBXBuildFile; productRef = 32D8AA8B2DF9E8B900F10CCC /* Glur */; };
 		EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */; };
 		ECA860D32DF86AC70005912B /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = ECA860D22DF86AC70005912B /* Lottie */; };
 /* End PBXBuildFile section */
@@ -15,9 +16,22 @@
 		9434108C2DE6EF390002634E /* Harmonica.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Harmonica.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		32D8AA892DF9E84800F10CCC /* Exceptions for "Harmonica" folder in "Harmonica" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9434108B2DE6EF390002634E /* Harmonica */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9434108E2DE6EF390002634E /* Harmonica */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				32D8AA892DF9E84800F10CCC /* Exceptions for "Harmonica" folder in "Harmonica" target */,
+			);
 			path = Harmonica;
 			sourceTree = "<group>";
 		};
@@ -30,6 +44,7 @@
 			files = (
 				EC77DA5E2DEEEFFB002DED9A /* FirebaseAI in Frameworks */,
 				ECA860D32DF86AC70005912B /* Lottie in Frameworks */,
+				32D8AA8C2DF9E8B900F10CCC /* Glur in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +89,7 @@
 			packageProductDependencies = (
 				EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */,
 				ECA860D22DF86AC70005912B /* Lottie */,
+				32D8AA8B2DF9E8B900F10CCC /* Glur */,
 			);
 			productName = Harmonica;
 			productReference = 9434108C2DE6EF390002634E /* Harmonica.app */;
@@ -107,6 +123,7 @@
 			packageReferences = (
 				EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				ECA860D12DF86AC70005912B /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				32D8AA8A2DF9E8B900F10CCC /* XCRemoteSwiftPackageReference "Glur" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9434108D2DE6EF390002634E /* Products */;
@@ -264,10 +281,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 8ZUB5C2R66;
+				DEVELOPMENT_TEAM = 8ZUB5C2R66;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "미디어 접근을 허용해주세요";
@@ -287,7 +304,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ADA4th.Harmonica;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = HarmonicaReal;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -301,10 +317,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 8ZUB5C2R66;
+				DEVELOPMENT_TEAM = 8ZUB5C2R66;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "미디어 접근을 허용해주세요";
@@ -324,7 +340,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ADA4th.Harmonica;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = HarmonicaReal;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				"SWIFT_OBJC_BRIDGING_HEADER[arch=*]" = "";
 				SWIFT_VERSION = 5.0;
@@ -356,6 +371,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		32D8AA8A2DF9E8B900F10CCC /* XCRemoteSwiftPackageReference "Glur" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/joogps/Glur";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
 		EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -375,6 +398,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		32D8AA8B2DF9E8B900F10CCC /* Glur */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 32D8AA8A2DF9E8B900F10CCC /* XCRemoteSwiftPackageReference "Glur" */;
+			productName = Glur;
+		};
 		EC77DA5D2DEEEFFB002DED9A /* FirebaseAI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = EC77DA5C2DEEEFFB002DED9A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

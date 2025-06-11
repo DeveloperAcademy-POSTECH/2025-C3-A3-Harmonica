@@ -2,6 +2,7 @@ import SwiftUI
 import Lottie
 
 struct STTView {
+  @EnvironmentObject var navigationManager: NavigationManager
   @State private var speechRecognizer = SpeechRecognizer()
   
   private let queryGenerateManager = QueryGenerateManager()
@@ -124,7 +125,8 @@ extension STTView: View {
         HStack {
           
           Button(action: {
-            // 백버튼
+              playSound(sound: "ButtonSound", type: "mp3")
+              navigationManager.poptoRoot()
           }) {
             Image(systemName: "arrow.left.circle.fill")
               .resizable()
@@ -185,7 +187,8 @@ extension STTView: View {
       musicManager.stopPreview()
       
       if selectedSongID != nil {
-        navigateToDetail = true
+//        navigateToDetail = true
+          navigationManager.navigate(to: .Loading)
       } else {
         startSTT()
       }
@@ -199,6 +202,7 @@ extension STTView: View {
         },
         playAction: { musicManager.playPreview(for: $0)},
         resetActoin: { self.isShowSearchResult = false  })
+      .environmentObject(navigationManager)
     }
     .onChange(of: self.item) { old, new in
       
@@ -206,6 +210,9 @@ extension STTView: View {
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }
       isShowRecognizerAlert = true
+    }
+    .onChange(of: self.item) { _, _ in
+        
     }
     .alert("권한이 필요합니다", isPresented: $isShowPermissionAlert) {
       Button(action: {
@@ -346,5 +353,6 @@ struct LottieView2: UIViewRepresentable {
 
 #Preview {
   STTView()
+        .environmentObject(NavigationManager())
 }
 

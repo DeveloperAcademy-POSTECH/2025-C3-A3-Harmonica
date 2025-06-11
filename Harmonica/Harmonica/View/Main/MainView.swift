@@ -1,16 +1,19 @@
 import SwiftUI
 import Glur
+import AVFoundation
 
 struct MainView: View {
     @State private var isSTTPressed: Bool = false
     @State private var isShazamPressed: Bool = false
-    @State private var path = NavigationPath()
+    @State private var showResultModal = false
+    @StateObject private var navigationManager = NavigationManager()
     var body: some View {
-//        NavigationStack(path: $path){
-        NavigationStack{
+        NavigationStack(path: $navigationManager.path){
             HStack(spacing: 24) {
+                SongBox(SongName: "내 여자 내 남자", AlbumCover: Image("내 여자 내 남자 앨범 커버")){
+                    showResultModal = true
+                }
                 SongBox(SongName: "나그네 고향", AlbumCover: Image("나그네고향"))
-                SongBox(SongName: "내 여자 내 남자", AlbumCover: Image("내 여자 내 남자 앨범 커버"))
                 SongBox(SongName: "")
             }
             .padding(.bottom, 12)
@@ -23,10 +26,11 @@ struct MainView: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged { _ in
                             isShazamPressed = true
+                            playSound(sound: "ButtonSound", type: "mp3")
                         }
                         .onEnded { _ in
                             isShazamPressed = false
-//                            path.append("shazam")
+                            navigationManager.navigate(to: .Shazam)
                         }
                 )
                 .padding(.trailing, 14)
@@ -40,21 +44,45 @@ struct MainView: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged{ _ in
                                 isSTTPressed = true
+                            playSound(sound: "ButtonSound", type: "mp3")
                         }
                         .onEnded{ _ in
                             isSTTPressed = false
-//                            path.append("STT")
+                            navigationManager.navigate(to: .STT)
                         }
                 )
+                .onTapGesture {
+                    playSound(sound: "ButtonSound", type: "mp3")
+                }
             }
-//            .navigationDestination(for: String.self) { value in
-//                if value == "shazam" {
-//                    SongSearchView()
-//                }
-//                else if value == "STT" {
-//                    STTView()
-//                }
-//            }
+            .navigationDestination(for: ViewType.self) { value in
+                            switch value {
+                            case .Shazam:
+                                SongSearchView()
+                                    .environmentObject(navigationManager)
+                            case .STT:
+                                STTView()
+                                    .environmentObject(navigationManager)
+                            case .Practice:
+                                KaraokeLyricView(songInfo: .preview)
+                                    .environmentObject(navigationManager)
+                            case .End:
+                                PracticeCompleteView()
+                                    .environmentObject(navigationManager)
+                            case .Loading:
+                                LoadingView()
+                                    .environmentObject(navigationManager)
+                            }
+                        }
+        }
+        .environmentObject(navigationManager)
+        .sheet(isPresented: $showResultModal) {
+            ZStack {
+                HistoryResultView(isPresented: $showResultModal)
+                    .environmentObject(navigationManager)
+            }
+            .frame(width: 1022, height: 687)
+            .cornerRadius(60)
         }
     }
 }
@@ -62,8 +90,12 @@ struct MainView: View {
 struct SongBox:View {
     @State var SongName:String = ""
     @State var AlbumCover:Image?
+    var action: () -> Void = {}
     var body: some View {
-        Button(action: {}){
+        Button(action: {
+            action()
+            playSound(sound: "ButtonSound", type: "mp3")
+        }){
             ZStack(alignment: .bottomLeading){
                 if let albumImage = AlbumCover {
                     albumImage
@@ -99,6 +131,78 @@ struct SongBox:View {
         }
     }
 }
+
+struct HistoryResultView: View {
+    @Binding var isPresented: Bool
+    @State private var selectedSongIndex: Int? = nil
+    @State private var isPlaying: Bool = false
+    @State private var isLoading: Bool = false
+    @EnvironmentObject var navigationManager: NavigationManager
+    
+    var body: some View {
+            VStack {
+                VStack(spacing: 56) {
+                  Text("찾으시던 노래가 맞으신가요?")
+                    .font(.system(size: 48, weight: .semibold))
+                    HStack(spacing: 25) {
+                      Image("내 여자 내 남자 커버")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 270, height: 270)
+                        .clipShape(.rect(cornerRadius: 30))
+                      
+                      VStack(alignment: .leading) {
+                        Text("배금성")
+                        Text("내 여자 내 남자")
+                      }
+                      .font(.system(size: 64, weight: .bold))
+                    }
+                  }
+                  HStack(spacing: 50) {
+                    Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
+                        isPresented = false
+                    }) {
+                      HStack {
+                        Image(systemName: "power.circle.fill")
+                          .font(.system(size: 48))
+                          .foregroundColor(Color(hex: "505050"))
+                        Text("처음으로 가기")
+                          .font(.system(size: 48, weight: .bold))
+                          .foregroundColor(Color(hex: "505050"))
+                      }
+                      .frame(width: 416, height: 100)
+                      .background(Color(hex: "DDDDDD"))
+                      .cornerRadius(16)
+                    }
+                    .frame(width: 416, height: 100.0)
+                    
+                    Button(action: {
+                        playSound(sound: "ButtonSound", type: "mp3")
+                        isPresented = false
+                        navigationManager.navigate(to: .Loading)
+                    }) {
+                      HStack {
+                        Image(systemName: "music.quarternote.3")
+                          .font(.system(size: 48))
+                          .foregroundColor(Color(hex: "005F61"))
+                        Text("노래 연습 시작")
+                          .font(.system(size: 48, weight: .bold))
+                          .foregroundColor(Color(hex: "005F61"))
+                      }
+                        
+                      .frame(width: 416, height: 100)
+                      .background(Color(hex: "C8E9EA"))
+                      .cornerRadius(16)
+                    }
+                      
+                  }
+                }
+                .padding(.vertical, 10)
+                .navigationBarHidden(true)
+        }
+    }
+
 
 #Preview {
     //    SongBox(SongName: "나그네 고향")

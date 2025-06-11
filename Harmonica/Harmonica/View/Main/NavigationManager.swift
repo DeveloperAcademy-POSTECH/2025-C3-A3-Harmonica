@@ -8,11 +8,12 @@
 import SwiftUI
 
 // View의 종류에 대한 Enum
-enum ViewType {
+enum ViewType: Hashable {
     case STT
     case Shazam
     case Practice
     case End
+    case Loading
 }
 
 // MARK: 화면 전환을 관리하는 객체
