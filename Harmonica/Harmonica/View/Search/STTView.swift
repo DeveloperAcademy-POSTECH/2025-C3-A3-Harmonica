@@ -112,7 +112,7 @@ extension STTView: View {
   var body: some View {
     ZStack {
       
-      LottieView2(animationName: "SongTitleSearchView")
+      LottieView(animationName: "SongTitleSearchView(진짜 최종)")
       
       VStack {
         HStack {
@@ -316,21 +316,6 @@ struct NavigationTestView: View {
       Text("노래: \(id)")
     }
   }
-}
-
-struct LottieView2: UIViewRepresentable {
-    let animationName: String
-    var loopMode: LottieLoopMode = .loop
-
-    func makeUIView(context: Context) -> LottieAnimationView {
-        let view = LottieAnimationView(name: animationName)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.loopMode = loopMode
-        view.play()
-        return view
-    }
-
-    func updateUIView(_ uiView: LottieAnimationView, context: Context) {}
 }
 
 

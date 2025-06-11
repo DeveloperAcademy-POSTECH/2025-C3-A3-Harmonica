@@ -22,6 +22,7 @@ extension SongSearchResultView: View {
           VStack(spacing: 56) {
             Text("찾으시던 노래가 맞으신가요?")
               .font(.system(size: 48, weight: .semibold))
+              .foregroundColor(Color(hex: "254142"))
             
             if let artworkURL = item.artworkURL {
               HStack(spacing: 25) {
@@ -34,6 +35,7 @@ extension SongSearchResultView: View {
                 }
                 .frame(width: 270, height: 270)
                 .clipShape(.rect(cornerRadius: 30))
+                .shadow(radius: 4, y: 4)
                 
                 VStack(alignment: .leading) {
                   
@@ -42,6 +44,7 @@ extension SongSearchResultView: View {
                   Text(item.title)
                 }
                 .font(.system(size: 64, weight: .bold))
+                .foregroundColor(Color(hex: "4A4A4A"))
               }
             }
             HStack(spacing: 50) {
@@ -99,6 +102,7 @@ extension SongSearchResultView: View {
             Text("다시 검색해주세요.")
           }
           .font(.system(size: 48, weight: .semibold))
+          .foregroundColor(Color(hex: "254142"))
           
           HStack(spacing: 50) {
             Button(action: {
