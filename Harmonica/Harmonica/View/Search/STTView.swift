@@ -77,11 +77,18 @@ extension STTView {
     Task {
       do {
         let result = try await musicManager.searchTrack(query: query)
-        item = result
-        isShowSearchResult = true
+        
+        await MainActor.run {
+          item = result
+          isShowSearchResult = true
+        }
       } catch {
-        errorMessage = "노래 검색 중 에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
-        isShowErrorAlert = true
+        
+        await MainActor.run {
+          errorMessage = "노래 검색 중 에러가 발생했습니다.\n잠시 후에 다시 시도 해주세요."
+          isShowErrorAlert = true
+        }
+        
       }
       isLoading = false
     }
@@ -128,7 +135,7 @@ extension STTView: View {
           
           Spacer()
           
-          CustomTextFieldComponent(text: $speechRecognizer.transcript)
+          CustomTextFieldComponent(text: $speechRecognizer.transcript, isLoading: $isLoading)
             .padding(.leading, -80)
           
           Spacer()
@@ -141,6 +148,7 @@ extension STTView: View {
         
         Text(itemList[currentIndex])
           .font(.system(size: 64, weight: .semibold))
+          .foregroundStyle(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
           .frame(width: 657, alignment: .center)
           .onReceive(timer) { _ in
             if !isShowSearchResult {
@@ -191,6 +199,9 @@ extension STTView: View {
         },
         playAction: { musicManager.playPreview(for: $0)},
         resetActoin: { self.isShowSearchResult = false  })
+    }
+    .onChange(of: self.item) { old, new in
+      
     }
     .onChange(of: speechRecognizer.errorMessage) { _, new in
       guard new != nil else { return }
@@ -259,6 +270,7 @@ extension STTView {
   struct CustomTextFieldComponent {
     @State private var textWidth: CGFloat = 300
     @Binding var text: String
+    @Binding var isLoading: Bool
   }
 }
 
@@ -267,14 +279,20 @@ extension STTView.CustomTextFieldComponent: View {
     VStack {
       TextField("", text: $text)
         .font(.system(size: 48))
-        .foregroundStyle(Color(uiColor: UIColor(red: 0.6, green: 0.81, blue: 0.81, alpha: 1)))
+        .foregroundStyle(
+          isLoading
+          ? Color(uiColor: UIColor(red: 0.6, green: 0.81, blue: 0.81, alpha: 1)).opacity(0.4)
+          :  Color(uiColor: UIColor(red: 0.6, green: 0.81, blue: 0.81, alpha: 1)))
         .padding(.horizontal, 67)
         .padding(.vertical, 4)
+        .truncationMode(.head)
+        .multilineTextAlignment(.center)
         .frame(width: textWidth, height: 80)
         .background(
           RoundedRectangle(cornerRadius: 42)
             .fill(Color(uiColor: UIColor(red: 0.15, green: 0.26, blue: 0.26, alpha: 1)))
         )
+        .disabled(true)
         .overlay(alignment: .leading) {
           Text(text)
             .font(.system(size: 48))
@@ -288,7 +306,7 @@ extension STTView.CustomTextFieldComponent: View {
                 
                 Color.clear
                   .onChange(of: text) {
-                    let calculatedWidth = max(300, min(900, size.width))
+                    let calculatedWidth = max(300, min(900, size.width + 60))
                     withAnimation(.easeInOut(duration: 0.2)) {
                       textWidth = calculatedWidth
                     }
@@ -311,18 +329,18 @@ struct NavigationTestView: View {
 }
 
 struct LottieView2: UIViewRepresentable {
-    let animationName: String
-    var loopMode: LottieLoopMode = .loop
-
-    func makeUIView(context: Context) -> LottieAnimationView {
-        let view = LottieAnimationView(name: animationName)
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.loopMode = loopMode
-        view.play()
-        return view
-    }
-
-    func updateUIView(_ uiView: LottieAnimationView, context: Context) {}
+  let animationName: String
+  var loopMode: LottieLoopMode = .loop
+  
+  func makeUIView(context: Context) -> LottieAnimationView {
+    let view = LottieAnimationView(name: animationName)
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.loopMode = loopMode
+    view.play()
+    return view
+  }
+  
+  func updateUIView(_ uiView: LottieAnimationView, context: Context) {}
 }
 
 
